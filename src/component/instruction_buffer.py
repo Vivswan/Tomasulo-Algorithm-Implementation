@@ -1,45 +1,50 @@
-from typing import List
+from typing import List, Union
 
-from src.component.intruction import Instruction, parse_instruction
+from src.component.intruction import Instruction
 
 
 class InstructionBuffer:
     full_code: List[Instruction]
     buffer: List[Instruction]
+    buffer_limit: int
+    buffer_code_index: int
 
-    def __init__(self, code: str, buffer_len):
+    def __init__(self, buffer_limit):
         self.full_code = []
-        code = code.split("\n")
-        for line in code:
+        self.buffer = []
+        self.buffer_limit = buffer_limit
+        self.buffer_code_index = 0
+
+    def append_code(self, code_str: str):
+        parser_code = []
+        for line in code_str.split("\n"):
             line = line.strip()
+
             if len(line) == 0:
                 continue
 
-            self.full_code.append(parse_instruction(line))
+            if line.startswith("#"):
+                continue
 
+            parser_code.append(Instruction(line))
 
+        self.full_code += parser_code
+        self.step()
+        return self
 
-    def peak(self) -> Instruction:
+    def peak(self) -> Union[None, Instruction]:
+        if len(self.buffer) == 0:
+            return None
 
-        pass
+        return self.buffer[0]
 
-    def pop(self) -> Instruction:
-        pass
+    def pop(self) -> Union[None, Instruction]:
+        if len(self.buffer) == 0:
+            return None
+
+        return self.buffer.pop(0)
 
     def step(self):
-        pass
-
-    def clear(self):
-        pass
-
-
-if __name__ == '__main__':
-    code = """
-        LD R1 0(R2) 
-        ADD R1, R1, R3 
-        SD R1, 0(R2) 
-        ADD R2, R2, 8 
-        BNE R2, R4, Loop
-    """
-    ib = InstructionBuffer(code, 5)
-    print(ib.full_code)
+        while len(self.buffer) < self.buffer_limit and self.buffer_code_index < len(self.full_code):
+            self.buffer.append(self.full_code[self.buffer_code_index])
+            self.buffer_code_index += 1

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import List, Union, Any, TypeVar, Generic
 
 from src.component.events import StageEvent
@@ -7,7 +8,7 @@ T = TypeVar('T')
 operand_types = Union[str, int, float, bool]
 
 
-class InstructionType:
+class InstructionType(Enum):
     # Data Transfer Instructions
     LD = "LD"
     SD = "SD"
@@ -30,14 +31,27 @@ class InstructionType:
     DIVD = "DIVD"
 
 
-@dataclass
 class Instruction(Generic[T]):
     instruction: str
     type: InstructionType
     operands: List[operand_types]
     stage_event: StageEvent
-    result: T
+    result: T = None
+    destination: str
 
+    def __init__(self, instr_str: str):
+        instr_type = instr_str.split(" ")[0].replace(".", "").upper()
+        operands = instr_str.split(" ")[1:]
+        operands = [x.replace(",", "") for x in operands]
 
-def parse_instruction(instr_line: str) -> Instruction:
-    pass
+        if not hasattr(InstructionType, instr_type):
+            raise Exception(f'Invalid instruction type: "{instr_type}"')
+
+        self.instruction = instr_str
+        self.type = getattr(InstructionType, instr_type)
+        self.operands = operands
+        self.stage_event = StageEvent()
+        self.result = None
+
+    def __repr__(self):
+        return f"{self.instruction}: operands={self.operands}, destination={self.destination}, result={self.result}, event=[{self.stage_event}]"

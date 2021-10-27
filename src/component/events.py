@@ -1,11 +1,19 @@
-from typing import Tuple, Union
-
-stage_event_type = Union[int, Tuple[int, int]]
+from typing import Tuple
 
 
 class StageEvent:
-    issue: stage_event_type
-    execute: stage_event_type
-    memory: stage_event_type
-    write_back: stage_event_type
-    commit: stage_event_type
+    issue: int = None
+    execute: Tuple[int, int] = None
+    memory: Tuple[int, int] = None
+    write_back: int = None
+    commit: int = None
+
+    def __repr__(self):
+        return f"{self.issue}, {self.execute}, {self.memory}, {self.write_back}, {self.commit}"
+
+
+class Processor:
+    cycle: int = -1
+
+
+processor_status = Processor()
