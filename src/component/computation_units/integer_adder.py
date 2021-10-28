@@ -1,11 +1,9 @@
 from src.component.computation_units.base_class import ComputationUnit
-from src.component.events import processor_status
 from src.component.intruction import Instruction, InstructionType
 
 
 class IntegerAdder(ComputationUnit):
     instruction_type = [InstructionType.ADDI, InstructionType.SUBI, InstructionType.ADD, InstructionType.SUB]
-    latency = 1
 
     def decode_instruction(self, instruction: Instruction):
         instruction.operands[1] = self.rat.get(instruction.operands[1])

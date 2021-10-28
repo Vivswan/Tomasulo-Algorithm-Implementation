@@ -67,15 +67,37 @@ class Tomasulo:
         for i in compute_unit[:num_cbd]:
             instruction = i[2]
             i[1].remove_instruction(instruction)
-            self.rat.set_rob_value(instruction.destination, instruction.result)
+            rob_entry = self.rat.set_rob_value(instruction.destination, instruction.result)
+
+            for instr in self.instruction_buffer.full_code:
+                if rob_entry in instr.operands:
+                    instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
+
             instruction.stage_event.write_back = self._cycle
-            print(instruction, instruction.result)
+
+    def commit(self):
+        instruction = None
+        for instr in self.instruction_buffer.full_code:
+            if instr.stage_event.commit is not None:
+                continue
+            if instr.stage_event.write_back is None:
+                break
+            if instr.stage_event.write_back < self._cycle:
+                instruction = instr
+            break
+
+        if instruction is None:
+            return None
+
+        self.rat.commit_rob(instruction.destination)
+        instruction.stage_event.commit = self._cycle
 
     def step(self):
         print(self._cycle)
         self.issue()
         self.execute()
         self.write_back()
+        self.commit()
         self._cycle += 1
 
     def get_cycle(self) -> int:
@@ -102,8 +124,10 @@ if __name__ == '__main__':
         SUBi R1, R2, 5
     """
     tomasulo = Tomasulo(code)
-    while tomasulo._cycle < 10:
+    while tomasulo._cycle < 9:
         tomasulo.step()
     print()
     for k in tomasulo.instruction_buffer.full_code:
         print(k)
+    print()
+    tomasulo.rat.print_tables()

@@ -32,7 +32,6 @@ class ComputationUnit:
         self.buffer_list.append(instruction)
 
     def step(self, cycle: int):
-        print(self.buffer_list)
         for instruction in self.buffer_list:
             if instruction.stage_event.issue >= cycle:
                 continue
@@ -46,9 +45,9 @@ class ComputationUnit:
         if not isinstance(instruction.operands[operand_index], ROBField):
             return True
 
-        if instruction.operands[operand_index].finished:
-            instruction.operands[operand_index] = instruction.operands[operand_index].value
-            return True
+        # if instruction.operands[operand_index].finished:
+        #     instruction.operands[operand_index] = instruction.operands[operand_index].value
+        #     return True
 
         return False
 

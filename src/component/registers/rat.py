@@ -47,7 +47,7 @@ class RAT:
         if rob != self.rob:
             raise Exception(f"Invalid index: {rob_index}")
 
-        self.rob.set_value(rob_i, value)
+        return self.rob.set_value(rob_i, value)
 
     def commit_rob(self, rob_index):
         rob, rob_i = self._get_index(rob_index)
@@ -57,8 +57,9 @@ class RAT:
         rob_value = self.rob[rob_i]
         if rob_index == self.reference_dict[rob_value.destination]:
             self.reference_dict[rob_value.destination] = rob_value.destination
-            register, register_index = self._get_index(rob_value.destination, use_references=False)
-            register[register_index] = rob_value.value
+
+        register, register_index = self._get_index(rob_value.destination, use_references=False)
+        register[register_index] = rob_value.value
 
         self.rob.remove(rob_i)
 
