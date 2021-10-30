@@ -7,15 +7,12 @@ from src.component.registers.rob import ROBField
 
 class ComputationUnit:
     instruction_type: Set[InstructionType]
-    buffer_list: List[Instruction] = []
-    buffer_limit: int
-    num_units: int
 
-    def __init__(self, rat: RAT, latency: int, num_rs: int, num_units: int = 1):
-        self.rat = rat
-        self.latency = latency
-        self.buffer_limit = num_rs
-        self.num_units = num_units
+    def __init__(self, rat: RAT, latency: int, num_rs: int):
+        self.rat: RAT = rat
+        self.latency: int = latency
+        self.buffer_limit: int = num_rs
+        self.buffer_list: List[Instruction] = []
 
     def is_full(self) -> bool:
         return not (len(self.buffer_list) < self.buffer_limit)
@@ -45,9 +42,9 @@ class ComputationUnit:
         if not isinstance(instruction.operands[operand_index], ROBField):
             return True
 
-        # if instruction.operands[operand_index].finished:
-        #     instruction.operands[operand_index] = instruction.operands[operand_index].value
-        #     return True
+        if instruction.operands[operand_index].finished:
+            instruction.operands[operand_index] = instruction.operands[operand_index].value
+            return True
 
         return False
 
@@ -57,10 +54,21 @@ class ComputationUnit:
     def _result(self, cycle: int) -> List[Instruction]:
         ready_instructions = []
         for i in self.buffer_list:
-            if i.stage_event.execute is None:
+            max_cycle = -1
+
+            if i.stage_event.execute is not None:
+                max_cycle = max(max_cycle, i.stage_event.execute[1])
+
+            if i.stage_event.memory is not None:
+                max_cycle = max(max_cycle, i.stage_event.memory[1])
+
+            if i.stage_event.commit is not None:
+                max_cycle = max(max_cycle, i.stage_event.commit[1])
+
+            if max_cycle == -1:
                 continue
 
-            if i.stage_event.execute[1] < cycle:
+            if max_cycle < cycle:
                 ready_instructions.append(i)
 
         return ready_instructions

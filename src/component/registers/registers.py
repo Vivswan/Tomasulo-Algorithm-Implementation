@@ -5,13 +5,11 @@ T = TypeVar('T')
 
 
 class RegisterBase(Generic[T]):
-    data: List[T]
-
     def __init__(self, num, default_value=0):
         if num < 0:
             raise ValueError(f"number of register cannot be less than 0: num = {num}")
 
-        self.data = [default_value] * (num + 1)
+        self.data: List[T] = [default_value] * (num + 1)
 
     def get(self, index: int) -> T:
         return self[index]

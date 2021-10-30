@@ -13,8 +13,6 @@ class ROBField:
 
 
 class ROB(RegisterBase[ROBField]):
-    prefix_tag = "ROB"
-
     def __init__(self, num):
         super().__init__(num, None)
 

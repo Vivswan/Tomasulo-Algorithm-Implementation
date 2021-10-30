@@ -1,6 +1,6 @@
-from dataclasses import dataclass
+import re
 from enum import Enum
-from typing import List, Union, Any, TypeVar, Generic
+from typing import List, Union, TypeVar, Generic
 
 from src.component.events import StageEvent
 
@@ -41,8 +41,8 @@ class Instruction(Generic[T]):
 
     def __init__(self, instr_str: str):
         instr_type = instr_str.split(" ")[0].replace(".", "").upper()
-        operands = instr_str.split(" ")[1:]
-        operands = [x.replace(",", "") for x in operands]
+        operands = re.split(' |\(|\)|,', instr_str)[1:]
+        operands = [i for i in operands if len(i) > 0]
 
         if not hasattr(InstructionType, instr_type):
             raise Exception(f'Invalid instruction type: "{instr_type}"')
@@ -52,6 +52,7 @@ class Instruction(Generic[T]):
         self.operands = operands
         self.stage_event = StageEvent()
         self.result = None
+        self.destination = None
 
     def __repr__(self):
         return f"{self.instruction}: operands={self.operands}, destination={self.destination}, result={self.result}, event=[{self.stage_event}]"

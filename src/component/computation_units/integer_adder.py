@@ -27,5 +27,4 @@ class IntegerAdder(ComputationUnit):
 
             instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
             return True
-        else:
-            return False
+        return False

@@ -2,6 +2,7 @@ from typing import List
 
 from src.component.computation_units.base_class import ComputationUnit
 from src.component.computation_units.integer_adder import IntegerAdder
+from src.component.computation_units.memory import Memory
 from src.component.instruction_buffer import InstructionBuffer
 from src.component.registers.rat import RAT
 
@@ -20,7 +21,8 @@ class Tomasulo:
         self.instruction_buffer = InstructionBuffer(instruction_buffer_size)
         self.rat = RAT(num_register, num_register, num_rob)
         self.computational_units: List[ComputationUnit] = [
-            IntegerAdder(rat=self.rat, latency=2, num_rs=2, num_units=1),
+            IntegerAdder(rat=self.rat, latency=1, num_rs=2),
+            Memory(rat=self.rat, latency=1, latency_mem=4, num_rs=1),
         ]
 
         self.instruction_buffer.append_code(full_code)
@@ -67,6 +69,9 @@ class Tomasulo:
         for i in compute_unit[:num_cbd]:
             instruction = i[2]
             i[1].remove_instruction(instruction)
+            if instruction.destination == "NOP":
+                continue
+
             rob_entry = self.rat.set_rob_value(instruction.destination, instruction.result)
 
             for instr in self.instruction_buffer.full_code:
@@ -90,7 +95,7 @@ class Tomasulo:
             return None
 
         self.rat.commit_rob(instruction.destination)
-        instruction.stage_event.commit = self._cycle
+        instruction.stage_event.commit = (self._cycle, self._cycle)
 
     def step(self):
         print(self._cycle)
@@ -110,9 +115,10 @@ class Tomasulo:
 
 if __name__ == '__main__':
     code = """
-        # LD R1 0(R2) 
-        # SD R1 10(R2) 
-        # 
+        LD R1 0(R2) 
+        ADDI R1, R2, 5
+        SD R1 10(R2) 
+        LD R1 10(R2) 
         # BEQ R1, R2, Loop
         # BNE R1, R2, Loop
 
@@ -124,7 +130,7 @@ if __name__ == '__main__':
         SUBi R1, R2, 5
     """
     tomasulo = Tomasulo(code)
-    while tomasulo._cycle < 9:
+    while tomasulo._cycle < 50:
         tomasulo.step()
     print()
     for k in tomasulo.instruction_buffer.full_code:

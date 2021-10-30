@@ -2,7 +2,7 @@ import re
 from typing import Tuple
 
 from src.component.registers.registers import IntegerRegister, FloatRegister, RegisterBase
-from src.component.registers.rob import ROB
+from src.component.registers.rob import ROB, ROBField
 
 
 class RAT:
@@ -18,9 +18,13 @@ class RAT:
         self.all_tables = [self.integer_register, self.float_register, self.rob]
         self.reference_dict = {}
 
-    def get(self, index):
+    def get(self, index, resolve_rob=True):
         obj, obj_index = self._get_index(index)
-        return obj[obj_index]
+        value = obj[obj_index]
+        if isinstance(value, ROBField) and value.finished:
+            return value.value
+
+        return value
 
     def is_value_available(self, index):
         obj, obj_index = self._get_index(index)

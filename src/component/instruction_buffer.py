@@ -4,16 +4,11 @@ from src.component.intruction import Instruction
 
 
 class InstructionBuffer:
-    full_code: List[Instruction]
-    buffer: List[Instruction]
-    buffer_limit: int
-    buffer_code_index: int
-
     def __init__(self, buffer_limit):
-        self.full_code = []
-        self.buffer = []
-        self.buffer_limit = buffer_limit
-        self.buffer_code_index = 0
+        self.full_code: List[Instruction] = []
+        self.buffer: List[Instruction] = []
+        self.buffer_limit: int = buffer_limit
+        self.buffer_code_index: int = 0
 
     def append_code(self, code_str: str):
         parser_code = []
