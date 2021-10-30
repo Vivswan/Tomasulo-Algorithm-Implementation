@@ -21,7 +21,7 @@ class Tomasulo:
         self.instruction_buffer = InstructionBuffer(instruction_buffer_size)
         self.rat = RAT(num_register, num_register, num_rob)
         self.computational_units: List[ComputationUnit] = [
-            IntegerAdder(rat=self.rat, latency=1, num_rs=2),
+            IntegerAdder(rat=self.rat, latency=2, num_rs=2),
             Memory(rat=self.rat, latency=1, latency_mem=4, num_rs=1),
         ]
 
@@ -98,7 +98,7 @@ class Tomasulo:
         instruction.stage_event.commit = (self._cycle, self._cycle)
 
     def step(self):
-        print(self._cycle)
+        # print(self._cycle)
         self.issue()
         self.execute()
         self.write_back()
@@ -115,10 +115,10 @@ class Tomasulo:
 
 if __name__ == '__main__':
     code = """
-        LD R1 0(R2) 
-        ADDI R1, R2, 5
-        SD R1 10(R2) 
-        LD R1 10(R2) 
+        # LD R1 0(R2) 
+        # ADDI R1, R2, 5
+        # SD R1 10(R2) 
+        # LD R1 10(R2) 
         # BEQ R1, R2, Loop
         # BNE R1, R2, Loop
 

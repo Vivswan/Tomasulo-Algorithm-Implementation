@@ -30,6 +30,12 @@ class ComputationUnit:
 
     def step(self, cycle: int):
         for instruction in self.buffer_list:
+            if instruction.stage_event.execute is None:
+                continue
+            if instruction.stage_event.execute[1] + 1 >= cycle:
+                return
+
+        for instruction in self.buffer_list:
             if instruction.stage_event.issue >= cycle:
                 continue
 
