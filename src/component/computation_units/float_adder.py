@@ -12,7 +12,7 @@ class FloatAdder(ComputationUnit):
         instruction.destination = instruction.operands[0]
         return instruction
 
-    def step_instruction(self, cycle, instruction):
+    def step_execute(self, cycle, instruction: Instruction):
         if self.resolve_operand(instruction, 1) and self.resolve_operand(instruction, 2):
             if instruction.type == InstructionType.ADDD:
                 instruction.result = instruction.operands[1] + instruction.operands[2]

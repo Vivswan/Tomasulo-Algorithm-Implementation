@@ -1,0 +1,6 @@
+# THis is Test Case 1 for Functionality
+ADDI R1, R1, 5
+ADDI R2, R2, 13
+SUB R3, R2, R1
+ADD R3, R2, R3 
+SUB R3, R3, R1

@@ -1,0 +1,6 @@
+# THis is Test Case 4 for Functionality of Branch instruction
+ADDI R1, R1, 5
+ADDI R2, R2, 1
+BNE R1, R2, -2
+ADD R3, R3, 3
+SUB R4, R3, 1

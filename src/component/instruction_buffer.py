@@ -4,11 +4,11 @@ from src.component.intruction import Instruction
 
 
 class InstructionBuffer:
-    def __init__(self, buffer_limit):
+    def __init__(self):
         self.full_code: List[Instruction] = []
-        self.buffer: List[Instruction] = []
-        self.buffer_limit: int = buffer_limit
-        self.buffer_code_index: int = 0
+        self.counter = 0
+        self.pointer: int = 0
+        self.history: List[Instruction] = []
 
     def append_code(self, code_str: str):
         parser_code = []
@@ -21,25 +21,21 @@ class InstructionBuffer:
             if line.startswith("#"):
                 continue
 
-            parser_code.append(Instruction(line))
-
+            parser_code.append(Instruction(line, index=len(parser_code) + len(self.full_code)))
         self.full_code += parser_code
-        self.step()
         return self
 
     def peak(self) -> Union[None, Instruction]:
-        if len(self.buffer) == 0:
+        if self.pointer >= len(self.full_code):
             return None
-
-        return self.buffer[0]
+        return self.full_code[self.pointer]
 
     def pop(self) -> Union[None, Instruction]:
-        if len(self.buffer) == 0:
+        if self.peak() is None:
             return None
-
-        return self.buffer.pop(0)
-
-    def step(self):
-        while len(self.buffer) < self.buffer_limit and self.buffer_code_index < len(self.full_code):
-            self.buffer.append(self.full_code[self.buffer_code_index])
-            self.buffer_code_index += 1
+        instr = Instruction(self.peak().instruction, self.peak().index)
+        instr.counter_index = self.counter
+        self.pointer += 1
+        self.counter += 1
+        self.history.append(instr)
+        return instr

@@ -32,7 +32,9 @@ class ComputationUnit:
         for instruction in self.buffer_list:
             if instruction.stage_event.execute is None:
                 continue
-            if instruction.stage_event.execute[1] + 1 >= cycle:
+            if instruction.stage_event.execute[1] >= cycle:
+                return
+            if instruction.stage_event.write_back is None:
                 return
 
         for instruction in self.buffer_list:
@@ -40,7 +42,7 @@ class ComputationUnit:
                 continue
 
             if instruction.result is None:
-                if self.step_instruction(cycle, instruction):
+                if self.step_execute(cycle, instruction):
                     return None
 
     @staticmethod
@@ -54,7 +56,7 @@ class ComputationUnit:
 
         return False
 
-    def step_instruction(self, cycle, instruction: Instruction) -> bool:
+    def step_execute(self, cycle, instruction: Instruction) -> bool:
         raise NotImplemented
 
     def _result(self, cycle: int) -> List[Instruction]:

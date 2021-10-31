@@ -5,8 +5,8 @@ if __name__ == '__main__':
     code = test_codes[1]
     tomasulo = Tomasulo(code)
 
-    while tomasulo._cycle < 30:
+    while tomasulo._cycle < 100:
         tomasulo.step()
-    print()
-    for k in tomasulo.instruction_buffer.full_code:
+
+    for k in tomasulo.instruction_buffer.history:
         print(k)

@@ -33,13 +33,15 @@ class InstructionType(Enum):
 
 class Instruction(Generic[T]):
     instruction: str
+    counter_index: int
     type: InstructionType
     operands: List[operand_types]
     stage_event: StageEvent
-    result: T = None
+    result: T
     destination: str
+    related_data: dict
 
-    def __init__(self, instr_str: str):
+    def __init__(self, instr_str: str, index):
         instr_type = instr_str.split(" ")[0].replace(".", "").upper()
         operands = re.split(' |\(|\)|,', instr_str)[1:]
         operands = [i for i in operands if len(i) > 0]
@@ -48,11 +50,21 @@ class Instruction(Generic[T]):
             raise Exception(f'Invalid instruction type: "{instr_type}"')
 
         self.instruction = instr_str
+        self.counter_index = -1
+        self.index = index
         self.type = getattr(InstructionType, instr_type)
         self.operands = operands
         self.stage_event = StageEvent()
         self.result = None
         self.destination = None
+        self.related_data = {}
 
     def __repr__(self):
-        return f"{self.instruction}: operands={self.operands}, destination={self.destination}, result={self.result}, event=[{self.stage_event}]"
+        result = str(self.index).ljust(3)
+        result += " " + str(self.counter_index).ljust(3)
+        result += " " + self.instruction
+        result += f": operands={self.operands}"
+        result += f", destination={self.destination}"
+        result += f", result={self.result}"
+        result += f", event=[{self.stage_event}]"
+        return result
