@@ -1,6 +1,18 @@
-# THis is Test Case 1 for Functionality
-ADDI R1, R1, 5
-ADDI R2, R2, 13
-SUB R3, R2, R1
-ADD R3, R2, R3 
-SUB R3, R3, R1
+# Straight-line code where there are dependencies (true and false)
+
+LD   F0, 0 (R1)
+DIVD F2, F0, F4
+ADDD F1, F0, F3
+#Write-After-Read (WAR: anti-dependence) on F3
+ADDI R1, R1, -8
+SD   0 (R1), F2
+
+LD   F0, 0 (R1)
+# Should get the previously stored F2-value
+ADDD F0, F1, F0
+#Read-After-Write (RAW: true dependence) on F0
+SUBD F3, F0, F2
+#Write-After-Read (WAR: anti-dependence) on F3
+MULTD F3, F1, F2
+#Write-After-Write (WAW: output dependence) on F3
+SD   -8 (R1), F3

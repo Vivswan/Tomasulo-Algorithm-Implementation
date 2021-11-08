@@ -23,6 +23,41 @@ class Memory(ComputationUnit):
             instruction.operands[0] = self.rat.get(instruction.operands[0])
             instruction.destination = "NOP"
 
+    def step(self, cycle: int):
+        execute = True
+        for instruction in self.buffer_list:
+            if instruction.stage_event.execute is None:
+                continue
+            if instruction.stage_event.execute[1] >= cycle:
+                execute = False
+
+        if execute:
+            for instruction in self.buffer_list:
+                if instruction.stage_event.issue >= cycle:
+                    continue
+
+                if instruction.result is None:
+                    if self.step_execute(cycle, instruction):
+                        break
+
+        memory = True
+        for instruction in self.buffer_list:
+            if "memory_cycles" not in instruction.related_data:
+                continue
+            if instruction.related_data["memory_cycles"][1] >= cycle:
+                memory = False
+
+        if memory:
+            for instruction in self.buffer_list:
+                if "memory_cycles" in instruction.related_data:
+                    continue
+                if instruction.stage_event.execute is None:
+                    continue
+                if instruction.stage_event.execute[1] >= cycle:
+                    continue
+                if self.step_memory(cycle, instruction):
+                    break
+
     def step_execute(self, cycle, instruction: Instruction):
         if self.resolve_operand(instruction, 2):
             memory_address = instruction.operands[1] + instruction.operands[2]
@@ -32,29 +67,34 @@ class Memory(ComputationUnit):
             if "memory_address" not in instruction.related_data:
                 instruction.related_data["memory_address"] = memory_address
                 instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
-
-            for instr in self.buffer_list:
-                if instruction.type == InstructionType.LD and instr.type == InstructionType.SD:
-                    if instr.counter_index < instruction.counter_index and instr.related_data[
-                        "memory_address"] == memory_address:
-                        return False
-
-            if instruction.type == InstructionType.LD:
-                instruction.result = self.data[memory_address] if memory_address in self.data else 0
-            elif instruction.type == InstructionType.SD and self.resolve_operand(instruction, 0):
-                self.data[memory_address] = instruction.operands[0]
-                instruction.result = True
-            else:
-                return False
-
-            exe = instruction.stage_event.execute[1]
-            if instruction.type == InstructionType.LD:
-                instruction.stage_event.memory = (exe + 1, exe + self.latency_mem)
-            if instruction.type == InstructionType.SD:
-                instruction.stage_event.commit = (exe + 1, exe + self.latency_mem)
-            return True
-
+                instruction.stage_event.memory = -1
+                return True
         return False
+
+    def step_memory(self, cycle, instruction: Instruction):
+        memory_address = instruction.related_data["memory_address"]
+        for instr in self.buffer_list:
+            if instruction.type == InstructionType.LD and instr.type == InstructionType.SD:
+                if instr.counter_index < instruction.counter_index and instr.related_data[
+                    "memory_address"] == memory_address:
+                    return False
+
+        if instruction.type == InstructionType.LD:
+            instruction.result = self.data[memory_address] if memory_address in self.data else 0
+        elif instruction.type == InstructionType.SD and self.resolve_operand(instruction, 0):
+            self.data[memory_address] = instruction.operands[0]
+            instruction.result = True
+        else:
+            return False
+
+        memory_cycles = (cycle, cycle + self.latency_mem - 1)
+        instruction.related_data["memory_cycles"] = memory_cycles
+        instruction.stage_event.memory = None
+        if instruction.type == InstructionType.LD:
+            instruction.stage_event.memory = memory_cycles
+        if instruction.type == InstructionType.SD:
+            instruction.stage_event.commit = memory_cycles
+        return True
 
     def has_result(self, cycle: int) -> bool:
         for instr in self.buffer_list:

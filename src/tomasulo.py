@@ -1,3 +1,4 @@
+import copy
 from typing import List
 
 from src.component.computation_units.base_class import ComputationUnit
@@ -7,22 +8,25 @@ from src.component.computation_units.float_multiplier import FloatMultiplier
 from src.component.computation_units.integer_adder import IntegerAdder
 from src.component.computation_units.memory import Memory
 from src.component.instruction_buffer import InstructionBuffer
+from src.component.intruction import Instruction, InstructionType
 from src.component.registers.rat import RAT
 
 num_register = 32
 num_rob = 128
 num_cbd = 1
+count = 1
 
 
 class Tomasulo:
     _cycle = 1
 
     def __init__(self, full_code):
+        self.instruction_list: List[Instruction] = []
         self.instruction_buffer = InstructionBuffer()
         self.rat = RAT(num_register, num_register, num_rob)
-        self.branch_unit = Branch(rat=self.rat, latency=1, num_rs=1)
+        self.branch_unit = Branch(rat=self.rat, latency=3, num_rs=5)
         self.computational_units: List[ComputationUnit] = [
-            IntegerAdder(rat=self.rat, latency=2, num_rs=2),
+            IntegerAdder(rat=self.rat, latency=1, num_rs=5),
             FloatAdder(rat=self.rat, latency=3, num_rs=3),
             FloatMultiplier(rat=self.rat, latency=20, num_rs=2),
             Memory(rat=self.rat, latency=1, latency_mem=4, num_rs=3),
@@ -38,10 +42,24 @@ class Tomasulo:
         if self.branch_unit.is_busy():
             return None
 
-        instruction = self.instruction_buffer.peak()
+        for inst in self.instruction_buffer.history:
+            if inst.type in [InstructionType.BNE, InstructionType.BEQ]:
+                if "branch_correction" in inst.related_data:
+                    self.instruction_buffer.pointer = inst.result
+                    # self.rat = inst.related_data["rat_copy"]
+                    del inst.related_data["branch_correction"]
+                    break
+
+        instruction = self.instruction_buffer.pop()
         if instruction is None:
             return None
 
+        instruction.related_data["rat_copy"] = copy.deepcopy(self.rat)
+        # The predictions has been made on the outcome of the branch instruction.
+        if instruction.type in [InstructionType.BNE, InstructionType.BEQ]:
+            self.instruction_buffer.pointer += self.branch_unit.branch_prediction(instruction)
+
+        # this figures out which computational unit the instruction goes to.
         computational_unit = None
         for i in self.computational_units:
             if instruction.type in i.instruction_type:
@@ -54,7 +72,6 @@ class Tomasulo:
         if computational_unit.is_full():
             return None
 
-        instruction = self.instruction_buffer.pop()
         computational_unit.decode_instruction(instruction)
         instruction.stage_event.issue = self._cycle
         computational_unit.issue_instruction(instruction)
@@ -76,9 +93,6 @@ class Tomasulo:
             instruction = i[2]
             i[1].remove_instruction(instruction)
 
-            if instruction.type in self.branch_unit.instruction_type:
-                self.instruction_buffer.pointer = instruction.result
-
             if instruction.destination == "NOP":
                 continue
 
@@ -92,23 +106,26 @@ class Tomasulo:
 
     def commit(self):
         instruction = None
-        for instr in self.instruction_buffer.full_code:
+        for instr in self.instruction_buffer.history:
             if instr.stage_event.commit is not None:
-                continue
-            if instr.stage_event.write_back is None:
-                break
-            if instr.stage_event.write_back < self._cycle:
-                instruction = instr
+                if instr.stage_event.commit[1] >= self._cycle:
+                    break
+                else:
+                    continue
+            if instr.stage_event.write_back is not None:
+                if instr.stage_event.write_back == "NOP":
+                    instruction = instr
+                elif instr.stage_event.write_back < self._cycle:
+                    instruction = instr
+                    self.rat.commit_rob(instr.destination)
             break
 
         if instruction is None:
             return None
 
-        self.rat.commit_rob(instruction.destination)
         instruction.stage_event.commit = (self._cycle, self._cycle)
 
     def step(self):
-        # print(self._cycle)
         self.issue()
         self.execute()
         self.write_back()
@@ -125,26 +142,29 @@ class Tomasulo:
 
 if __name__ == '__main__':
     code = """
+        ADD R1, R2, R3 
+        SUB R1, R1, R3 
+        ADDI R1, R2, 5
+        ADDD F1, F2, F3 
+        SUB.D F1, F2, F3 
+        SUBi R1, R2, 5
+
+        LD R1 0(R2) 
+        LD R1 0(R2) 
         LD R1 0(R2) 
         # ADDI R1, R2, 5
         SD R1 8(R2) 
+        ADDI R1, R2, 5
         LD R1 8(R2) 
         LD R1 8(R2) 
         # BEQ R1, R2, 2
         # BNE R1, R2, 
-
-        # ADD R1, R2, R3 
-        # SUB R1, R1, R3 
-        # ADDI R1, R2, 5
-        # ADDD F1, F2, F3 
-        # SUB.D F1, F2, F3 
-        # SUBi R1, R2, 5
     """
     tomasulo = Tomasulo(code)
-    while tomasulo._cycle < 50:
+    while tomasulo._cycle < 500:
         tomasulo.step()
     print()
-    for k in tomasulo.instruction_buffer.full_code:
+    for k in tomasulo.instruction_buffer.history:
         print(k)
     print()
-    tomasulo.rat.print_tables()
+    # tomasulo.rat.print_tables()

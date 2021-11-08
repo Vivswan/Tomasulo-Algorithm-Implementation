@@ -1,0 +1,9 @@
+#demonstration of branch prediction. For example, upon misprediction, instructions from the wrong path are fetched.
+
+Loop: LD F1, 0(R1)
+MULTD F2, F1, F3
+ADDD F4, F1, F2
+ADDI R1, R1, -4
+BNEZ R1, Loop
+SUB F6, F4, F3
+SD F6, 0(R2)

@@ -64,6 +64,9 @@ class ComputationUnit:
         for i in self.buffer_list:
             max_cycle = -1
 
+            if -1 in [i.stage_event.execute, i.stage_event.memory, i.stage_event.commit]:
+                continue
+
             if i.stage_event.execute is not None:
                 max_cycle = max(max_cycle, i.stage_event.execute[1])
 

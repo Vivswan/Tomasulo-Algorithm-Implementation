@@ -16,6 +16,7 @@ class IntegerAdder(ComputationUnit):
 
         instruction.operands[0] = self.rat.reserve_rob(instruction.operands[0])
         instruction.destination = instruction.operands[0]
+
         return instruction
 
     def step_execute(self, cycle, instruction: Instruction):

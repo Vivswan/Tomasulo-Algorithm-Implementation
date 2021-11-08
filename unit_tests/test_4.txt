@@ -1,0 +1,9 @@
+#straight-line code where there are structure hazards in reservation stations and functional unit
+
+LD F6, 0 (R1)
+MULTD F2, F3, F4
+MULTD F1, F5, F5
+SD F2, 0(R2)
+DIVD F1, F1, F6
+ADDD F5, F4, F1
+SD F5, 0(R1)

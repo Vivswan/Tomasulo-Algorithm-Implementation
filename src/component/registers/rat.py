@@ -18,7 +18,7 @@ class RAT:
         self.all_tables = [self.integer_register, self.float_register, self.rob]
         self.reference_dict = {}
 
-    def get(self, index, resolve_rob=True):
+    def get(self, index):
         obj, obj_index = self._get_index(index)
         value = obj[obj_index]
         if isinstance(value, ROBField) and value.finished:

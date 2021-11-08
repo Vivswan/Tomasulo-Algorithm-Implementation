@@ -1,4 +1,4 @@
-# Load/Store
+# straight-line code where there are forwarding among load/store instructions
 
 LD F4, 0(R1)
 MULTD F1, F4, F2

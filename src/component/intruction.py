@@ -52,6 +52,12 @@ class Instruction(Generic[T]):
         self.instruction = instr_str
         self.counter_index = -1
         self.index = index
+        self.execution = True
+
+        # issue
+        self.branch_jump = None
+        self.branch_prediction_accurate = None  # placeholder
+
         self.type = getattr(InstructionType, instr_type)
         self.operands = operands
         self.stage_event = StageEvent()
@@ -63,8 +69,11 @@ class Instruction(Generic[T]):
         result = str(self.index).ljust(3)
         result += " " + str(self.counter_index).ljust(3)
         result += " " + self.instruction
-        result += f": operands={self.operands}"
-        result += f", destination={self.destination}"
         result += f", result={self.result}"
         result += f", event=[{self.stage_event}]"
+        result += f", destination={self.destination}"
+        result += f", operands={self.operands}"
+        if self.type in [InstructionType.BEQ, InstructionType.BNE]:
+            result += f", prediction ({self.branch_prediction_accurate})" \
+                      f": {'branch' if self.branch_jump else 'continue'}"
         return result
