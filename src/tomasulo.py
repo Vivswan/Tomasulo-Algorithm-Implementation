@@ -8,7 +8,7 @@ from src.component.computation_units.float_multiplier import FloatMultiplier
 from src.component.computation_units.integer_adder import IntegerAdder
 from src.component.computation_units.memory import Memory
 from src.component.instruction_buffer import InstructionBuffer
-from src.component.intruction import Instruction, InstructionType
+from src.component.intruction import Instruction
 from src.component.registers.rat import RAT
 
 num_register = 32
@@ -43,20 +43,23 @@ class Tomasulo:
             return None
 
         for inst in self.instruction_buffer.history:
-            if inst.type in [InstructionType.BNE, InstructionType.BEQ]:
-                if "branch_correction" in inst.related_data:
-                    self.instruction_buffer.pointer = inst.result
-                    # self.rat = inst.related_data["rat_copy"]
-                    del inst.related_data["branch_correction"]
-                    break
+            if inst.type not in self.branch_unit.instruction_type:
+                continue
+            if "branch_correction" in inst.related_data and inst.related_data["branch_correction"]:
+                self.instruction_buffer.pointer = inst.result
+                # self.rat = inst.related_data["rat_copy"]
+                del inst.related_data["branch_correction"]
+                break
 
         instruction = self.instruction_buffer.pop()
         if instruction is None:
             return None
 
+        # Makes a Copy of the RAT Table and stores it with the branch instruction
         instruction.related_data["rat_copy"] = copy.deepcopy(self.rat)
+
         # The predictions has been made on the outcome of the branch instruction.
-        if instruction.type in [InstructionType.BNE, InstructionType.BEQ]:
+        if instruction.type in self.branch_unit.instruction_type:
             self.instruction_buffer.pointer += self.branch_unit.branch_prediction(instruction)
 
         # this figures out which computational unit the instruction goes to.
