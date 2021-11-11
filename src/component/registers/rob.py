@@ -10,27 +10,47 @@ class ROBField:
     destination: str
     value: Union[int, float] = None
     finished: bool = False
+    index: str = ""
 
 
 class ROB(RegisterBase[ROBField]):
     def __init__(self, num):
         super().__init__(num, None)
+        self.pointer = 1
 
-    def _get_free_rob_index(self):
+    def _get_free_rob_index_circular(self):
+        if not any([i is None for i in self.data[1:]]):
+            return None
+
+        while True:
+            self.pointer %= len(self.data)
+            if self.pointer == 0:
+                self.pointer += 1
+
+            if self.data[self.pointer] is None:
+                return self.pointer
+
+            self.pointer += 1
+
+    def _get_free_rob_index_linear(self):
         for i, v in enumerate(self.data):
             if v is None and i != 0:
                 return i
         return None
+
+    def _get_free_rob_index(self):
+        return self._get_free_rob_index_circular()
 
     def is_full(self):
         return self._get_free_rob_index() is None
 
     def reserve_for(self, register_index: str):
         free_rob_index = self._get_free_rob_index()
+        self.pointer += 1
         if free_rob_index is None:
             raise Exception("No free ROB")
 
-        new_value = ROBField(destination=register_index)
+        new_value = ROBField(destination=register_index, index=f"ROB{free_rob_index}")
         self.data[free_rob_index] = new_value
         return f"ROB{free_rob_index}", new_value
 

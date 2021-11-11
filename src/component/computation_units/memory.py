@@ -5,6 +5,7 @@ from src.component.registers.rat import RAT
 
 class Memory(ComputationUnit):
     instruction_type = [InstructionType.LD, InstructionType.SD]
+    require_rob = [InstructionType.LD]
 
     # TODO: implement Queue
     def __init__(self, rat: RAT, latency: int, latency_mem: int, num_rs: int):
@@ -22,6 +23,8 @@ class Memory(ComputationUnit):
         if instruction.type == InstructionType.SD:
             instruction.operands[0] = self.rat.get(instruction.operands[0])
             instruction.destination = "NOP"
+            instruction.stage_event.write_back = "NOP"
+        return instruction
 
     def step(self, cycle: int):
         execute = True

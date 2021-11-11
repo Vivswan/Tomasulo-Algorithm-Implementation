@@ -35,9 +35,6 @@ class RAT:
             return True
 
     def reserve_rob(self, register_index):
-        return self.set_rob_pointer(register_index)
-
-    def set_rob_pointer(self, register_index):
         if self.rob.is_full():
             raise Exception("ROB is full")
         self._get_index(register_index)
@@ -64,6 +61,17 @@ class RAT:
 
         register, register_index = self._get_index(rob_value.destination, use_references=False)
         register[register_index] = rob_value.value
+
+        self.rob.remove(rob_i)
+
+    def remove_rob(self, rob_index):
+        rob, rob_i = self._get_index(rob_index)
+        if rob != self.rob:
+            raise Exception(f"Invalid index: {rob_index}")
+
+        rob_value = self.rob[rob_i]
+        if rob_index == self.reference_dict[rob_value.destination]:
+            self.reference_dict[rob_value.destination] = rob_value.destination
 
         self.rob.remove(rob_i)
 
@@ -99,7 +107,7 @@ if __name__ == '__main__':
     print(f"R1: {rat.get('R1')}")
     print(f"R0: {rat.get('R0')}")
     print(f"F2: {rat.get('F2')}")
-    rob_index = rat.set_rob_pointer("F2")
+    rob_index = rat.reserve_rob("F2")
     print(f"F2: {rat.get('F2')}")
     rat.set_rob_value(rob_index, 2)
     print(f"F2: {rat.get('F2')}")

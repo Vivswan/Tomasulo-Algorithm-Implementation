@@ -4,6 +4,7 @@ from src.component.intruction import Instruction, InstructionType
 
 class FloatAdder(ComputationUnit):
     instruction_type = [InstructionType.ADDD, InstructionType.SUBD]
+    require_rob = instruction_type
 
     def decode_instruction(self, instruction: Instruction):
         instruction.operands[1] = self.rat.get(instruction.operands[1])

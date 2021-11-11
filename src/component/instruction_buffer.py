@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from src.component.intruction import Instruction
+from src.component.intruction import Instruction, create_copy_instruction
 
 
 class InstructionBuffer:
@@ -9,6 +9,8 @@ class InstructionBuffer:
         self.counter = 0
         self.pointer: int = 0
         self.history: List[Instruction] = []
+        self.code_pointers = {}
+        self.parameters = {}
 
     def append_code(self, code_str: str):
         parser_code = []
@@ -21,7 +23,27 @@ class InstructionBuffer:
             if line.startswith("#"):
                 continue
 
-            parser_code.append(Instruction(line, index=len(parser_code) + len(self.full_code)))
+            if line.startswith("$"):
+                if len(self.full_code) > 0:
+                    raise Exception("$ should be before all instructions")
+                line = line[1:].strip()
+                if "=" in line:
+                    [key, value] = line.split("=")
+                    self.parameters[key.strip()] = value.strip()
+                continue
+
+            index = len(parser_code) + len(self.full_code)
+            if ":" in line:
+                [label, line] = line.split(":")
+                line = line.strip()
+                label = label.strip()
+                self.code_pointers[label] = index
+
+            for key, value in self.code_pointers.items():
+                if key in line:
+                    line = line.replace(key, str(value - index - 1))
+            instruction = Instruction(line, index=index)
+            parser_code.append(instruction)
         self.full_code += parser_code
         return self
 
@@ -33,7 +55,7 @@ class InstructionBuffer:
     def pop(self) -> Union[None, Instruction]:
         if self.peak() is None:
             return None
-        instr = Instruction(self.peak().instruction, self.peak().index)
+        instr = create_copy_instruction(self.peak())
         instr.counter_index = self.counter
         self.pointer += 1
         self.counter += 1

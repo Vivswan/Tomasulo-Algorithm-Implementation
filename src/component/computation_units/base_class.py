@@ -6,7 +6,8 @@ from src.component.registers.rob import ROBField
 
 
 class ComputationUnit:
-    instruction_type: Set[InstructionType]
+    instruction_type: Union[Set[InstructionType], List[InstructionType]]
+    require_rob: Union[Set[InstructionType], List[InstructionType]]
 
     def __init__(self, rat: RAT, latency: int, num_rs: int):
         self.rat: RAT = rat

@@ -1,7 +1,9 @@
+import copy
 import re
 from enum import Enum
 from typing import List, Union, TypeVar, Generic
 
+# from src.component.computation_units.base_class import ComputationUnit
 from src.component.events import StageEvent
 
 T = TypeVar('T')
@@ -32,43 +34,38 @@ class InstructionType(Enum):
 
 
 class Instruction(Generic[T]):
-    instruction: str
-    counter_index: int
-    type: InstructionType
-    operands: List[operand_types]
-    stage_event: StageEvent
-    result: T
-    destination: str
-    related_data: dict
-
-    def __init__(self, instr_str: str, index):
-        instr_type = instr_str.split(" ")[0].replace(".", "").upper()
-        operands = re.split(' |\(|\)|,', instr_str)[1:]
+    def __init__(self, instruction_str: str, index):
+        instruction_str = instruction_str.strip()
+        instruction_type = instruction_str.split(" ")[0].replace(".", "").upper()
+        operands = re.split(' |\(|\)|,', instruction_str)[1:]
         operands = [i for i in operands if len(i) > 0]
 
-        if not hasattr(InstructionType, instr_type):
-            raise Exception(f'Invalid instruction type: "{instr_type}"')
+        if not hasattr(InstructionType, instruction_type):
+            raise Exception(f'Invalid instruction type: "{instruction_type}"')
 
-        self.instruction = instr_str
-        self.counter_index = -1
-        self.index = index
-        self.execution = True
+        self.instruction: str = instruction_str
+        self.computation_unit: 'ComputationUnit' = None
+        self.counter_index: int = -1
+        self.index: int = index
+        self.execution: bool = True
 
         # issue
-        self.branch_jump = None
-        self.branch_prediction_accurate = None  # placeholder
+        self.branch_jump: bool = None
+        self.branch_prediction_accurate: bool = None  # placeholder
 
-        self.type = getattr(InstructionType, instr_type)
-        self.operands = operands
+        self.type: InstructionType = getattr(InstructionType, instruction_type)
+        self.operands: List[operand_types] = operands
         self.stage_event = StageEvent()
-        self.result = None
-        self.destination = None
-        self.related_data = {}
+        self.result: T = None
+        self.destination: str = None
+        self.related_data: dict = {}
 
     def __repr__(self):
         result = str(self.index).ljust(3)
         result += " " + str(self.counter_index).ljust(3)
         result += " " + self.instruction
+        result += f", unit={self.computation_unit.__class__.__name__}"
+        result += f", execution={self.execution}"
         result += f", result={self.result}"
         result += f", event=[{self.stage_event}]"
         result += f", destination={self.destination}"
@@ -77,3 +74,9 @@ class Instruction(Generic[T]):
             result += f", prediction ({self.branch_prediction_accurate})" \
                       f": {'branch' if self.branch_jump else 'continue'}"
         return result
+
+
+def create_copy_instruction(instruction):
+    result = copy.deepcopy(instruction)
+    result.computation_unit = instruction.computation_unit
+    return result
