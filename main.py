@@ -6,6 +6,8 @@ if __name__ == '__main__':
     tomasulo = Tomasulo(code).run()
 
     for k in tomasulo.instruction_buffer.history:
+        # if not k.execution:
+        #     continue
         print(k)
     print()
     assert_result, asserts = tomasulo.check_asserts()

@@ -9,7 +9,6 @@ from src.component.computation_units.float_multiplier import FloatMultiplier
 from src.component.computation_units.integer_adder import IntegerAdder
 from src.component.computation_units.memory import Memory
 from src.component.instruction_buffer import InstructionBuffer
-from src.component.intruction import Instruction
 from src.component.registers.rat import RAT
 from src.default_parameters import TOMASULO_DEFAULT_PARAMETERS
 
@@ -18,18 +17,19 @@ class Tomasulo:
     _cycle = 1
 
     def __init__(self, full_code):
-        self.instruction_list: List[Instruction] = []
         self.parameters = copy.deepcopy(TOMASULO_DEFAULT_PARAMETERS)
+
         self.instruction_buffer = InstructionBuffer()
         self.instruction_buffer.append_code(full_code)
-        self.set_parameters(self.instruction_buffer.parameters)
+        self.unused_code_parameters = copy.deepcopy(self.instruction_buffer.code_parameters)
+        self.set_parameters(self.unused_code_parameters, remove_used=True)
 
         self.rat = RAT(
             num_integer_register=self.parameters["num_register"],
             num_float_register=self.parameters["num_register"],
             num_rob=self.parameters["num_rob"]
         )
-        self.rat.set_values_from_parameters(self.instruction_buffer.parameters)
+        self.rat.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
 
         self.integer_adder = IntegerAdder(
             rat=self.rat,
@@ -52,7 +52,7 @@ class Tomasulo:
             latency_mem=self.parameters["memory_unit_latency_mem"],
             num_rs=self.parameters["memory_unit_rs"]
         )
-        self.memory_unit.set_values_from_parameters(self.instruction_buffer.parameters)
+        self.memory_unit.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
         self.computational_units: List[ComputationUnit] = [
             self.integer_adder,
             self.float_adder,
@@ -60,7 +60,8 @@ class Tomasulo:
             self.memory_unit,
         ]
 
-    def set_parameters(self, parameters: dict):
+    def set_parameters(self, parameters: dict, remove_used=False):
+        used_keys = []
         for key, value in parameters.items():
             if key in self.parameters:
                 parsed_value = ast.literal_eval(value)
@@ -71,6 +72,11 @@ class Tomasulo:
                         f', got: {type(parsed_value)}'
                     )
                 self.parameters[key] = parsed_value
+                used_keys.append(key)
+
+        if remove_used:
+            for key in used_keys:
+                del parameters[key]
 
     def assign_computational_unit(self):
         for instruction in self.instruction_buffer.full_code:
@@ -109,83 +115,70 @@ class Tomasulo:
         peak_instruction = self.instruction_buffer.peak()
         if peak_instruction is None:
             return None
-        if peak_instruction.type in peak_instruction.computation_unit.require_rob:
-            if self.rat.rob.is_full():
-                return None
-
-        # this figures out which computational unit the instruction goes to.
+        if peak_instruction.type in peak_instruction.computation_unit.require_rob and self.rat.rob.is_full():
+            return None
         if peak_instruction.computation_unit is None:
             Exception(f'"{peak_instruction.type}" instruction has not been implemented by any computational unit')
-
         if peak_instruction.computation_unit.is_full():
             return None
 
-        # Makes a Copy of the RAT Table and stores it with the branch instruction
         instruction = self.instruction_buffer.pop()
-        instruction.related_data["rat_copy"] = copy.deepcopy(self.rat)
+        instruction.stage_event.issue = self._cycle
+        instruction.computation_unit.decode_instruction(instruction)
+        instruction.computation_unit.issue_instruction(instruction)
 
         # The predictions has been made on the outcome of the branch instruction.
         if instruction.type in self.integer_adder.branch_unit.instruction_type:
             self.instruction_buffer.pointer += self.integer_adder.branch_unit.predict(instruction)
 
-        instruction.computation_unit.decode_instruction(instruction)
-        instruction.stage_event.issue = self._cycle
-        instruction.computation_unit.issue_instruction(instruction)
-
     def execute(self):
         for i in self.computational_units:
-            i.step(self.get_cycle())
+            i.step_execute(self.get_cycle())
+
+    def memory(self):
+        for i in self.computational_units:
+            i.step_memory(self.get_cycle())
 
     def write_back(self):
-        compute_unit = []
-        for i in self.computational_units:
-            if i.has_result(self.get_cycle()):
-                for j in i.peak_result(self.get_cycle()):
-                    compute_unit.append((j.stage_event.execute[1], i, j))
+        instructions_to_cdb = []
+        for unit in self.computational_units:
+            if unit.has_result(self.get_cycle()):
+                instructions_to_cdb.append(unit.peak_result(self.get_cycle()))
 
-        compute_unit.sort(key=lambda x: x[0])
+        instructions_to_cdb.sort(key=lambda x: x[0])
 
-        for i in compute_unit[:self.parameters["num_cbd"]]:
-            instruction = i[2]
-            i[1].remove_instruction(instruction)
-
-            if instruction.destination == "NOP":
-                continue
+        for _, instruction in instructions_to_cdb[:self.parameters["num_cbd"]]:
+            instruction.computation_unit.remove_instruction(instruction)
 
             rob_entry = self.rat.set_rob_value(instruction.destination, instruction.result)
-
-            for instr in self.instruction_buffer.full_code:
+            for instr in self.instruction_buffer.history:
                 if rob_entry in instr.operands:
                     instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
 
             instruction.stage_event.write_back = self.get_cycle()
 
     def commit(self):
-        instruction = None
-        for instr in self.instruction_buffer.history:
-            if not instr.execution:
+        for instruction in self.instruction_buffer.history:
+            if not instruction.execution:
                 continue
-            if instr.stage_event.commit is not None:
-                if instr.stage_event.commit[1] >= self.get_cycle():
-                    break
-                else:
-                    continue
-            if instr.stage_event.write_back is not None:
-                if instr.stage_event.write_back == "NOP":
-                    instruction = instr
-                elif instr.stage_event.write_back < self.get_cycle():
-                    instruction = instr
-                    self.rat.commit_rob(instr.destination)
-            break
-
-        if instruction is None:
+            if instruction.stage_event.commit is not None and instruction.stage_event.commit[1] < self.get_cycle():
+                continue
+            if instruction.stage_event.write_back is None:
+                return None
+            if instruction.stage_event.write_back != "NOP" and instruction.stage_event.write_back >= self.get_cycle():
+                return None
+            instruction_complete_cycle = instruction.computation_unit.result_event(instruction)
+            if instruction_complete_cycle is None or instruction_complete_cycle >= self.get_cycle():
+                return None
+            instruction.stage_event.commit = (self.get_cycle(), self.get_cycle())
+            if instruction.destination != "NOP":
+                self.rat.commit_rob(instruction.destination)
             return None
-
-        instruction.stage_event.commit = (self.get_cycle(), self.get_cycle())
 
     def step(self):
         self.issue()
         self.execute()
+        self.memory()
         self.write_back()
         self.commit()
         self._cycle += 1
@@ -208,11 +201,13 @@ class Tomasulo:
     def run(self):
         while self.is_working():
             self.step()
+            if self.get_cycle() > 10000:
+                break
         return self
 
     def check_asserts(self) -> Tuple[bool, List[AssertResult]]:
         assert_list = []
-        for check_key, check_value in self.instruction_buffer.asserts.items():
+        for check_key, check_value in self.instruction_buffer.code_asserts.items():
             value = None
             if check_key == "cycle":
                 value = self.get_cycle()
@@ -234,6 +229,7 @@ class Tomasulo:
 
 if __name__ == '__main__':
     code = """
+        $Mem[0] = 4
         # ADD R1, R2, R3 
         # SUB R1, R1, R3 
         # ADDI R1, R2, 5
@@ -243,8 +239,12 @@ if __name__ == '__main__':
 
         # LD R1 0(R2) 
         # LD R1 0(R2) 
-        LD R1 0(R2) 
+        LD R3 0(R2)
+        MULTD R3 R3 R3 
         # ADDI R1, R2, 5
+        SD R1 8(R2) 
+        SD R1 8(R3) 
+        SD R1 8(R2) 
         SD R1 8(R2) 
         ADDI R1, R2, 5
         LD R1 8(R2) 
@@ -252,11 +252,10 @@ if __name__ == '__main__':
         # BEQ R1, R2, 2
         # BNE R1, R2, 
     """
-    tomasulo = Tomasulo(code)
-    while tomasulo.get_cycle() < 500:
-        tomasulo.step()
+    tomasulo = Tomasulo(code).run()
     print()
     for k in tomasulo.instruction_buffer.history:
         print(k)
     print()
+    print(tomasulo.unused_code_parameters)
     # tomasulo.rat.print_tables()

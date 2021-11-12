@@ -1,6 +1,7 @@
 $ R1 = 3
+$ integer_adder_latency = 1
 ! R2 = 3
-! cycle = 19
+! cycle = 22
 
 Loop: ADDI R2, R2, 1
 SUBI R3, R3, 1

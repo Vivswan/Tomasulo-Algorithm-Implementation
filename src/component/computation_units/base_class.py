@@ -1,6 +1,6 @@
-from typing import Set, List, Union
+from typing import Set, List, Union, Tuple
 
-from src.component.intruction import InstructionType, Instruction
+from src.component.instruction import InstructionType, Instruction
 from src.component.registers.rat import RAT
 from src.component.registers.rob import ROBField
 
@@ -14,6 +14,7 @@ class ComputationUnit:
         self.latency: int = latency
         self.buffer_limit: int = num_rs
         self.buffer_list: List[Instruction] = []
+        self.execute_wait_for_result = True
 
     def is_empty(self) -> bool:
         return len(self.buffer_list) == 0
@@ -32,23 +33,6 @@ class ComputationUnit:
 
         self.buffer_list.append(instruction)
 
-    def step(self, cycle: int):
-        for instruction in self.buffer_list:
-            if instruction.stage_event.execute is None:
-                continue
-            if instruction.stage_event.execute[1] >= cycle:
-                return
-            if instruction.stage_event.write_back is None:
-                return
-
-        for instruction in self.buffer_list:
-            if instruction.stage_event.issue >= cycle:
-                continue
-
-            if instruction.result is None:
-                if self.step_execute(cycle, instruction):
-                    return None
-
     @staticmethod
     def resolve_operand(instruction, operand_index):
         if not isinstance(instruction.operands[operand_index], ROBField):
@@ -60,36 +44,68 @@ class ComputationUnit:
 
         return False
 
-    def step_execute(self, cycle, instruction: Instruction) -> bool:
+    def step_execute(self, cycle: int):
+        for instruction in self.buffer_list:
+            if instruction.stage_event.execute is None or instruction.stage_event.execute == "NOP":
+                continue
+            if instruction.stage_event.execute[1] >= cycle:
+                return
+            if self.has_result(cycle) and self.execute_wait_for_result:
+                return
+
+        for instruction in self.buffer_list:
+            if instruction.stage_event.issue >= cycle:
+                continue
+
+            if instruction.stage_event.execute is None:
+                if self.step_execute_instruction(cycle, instruction):
+                    return None
+
+    def step_memory(self, cycle: int):
+        for instruction in self.buffer_list:
+            if instruction.stage_event.memory is None or instruction.stage_event.memory == "NOP":
+                continue
+            if instruction.stage_event.memory[1] >= cycle:
+                return
+
+        for instruction in self.buffer_list:
+            if instruction.stage_event.execute is None:
+                continue
+            if instruction.stage_event.execute[1] >= cycle:
+                continue
+
+            if instruction.stage_event.memory is None:
+                if self.step_memory_instruction(cycle, instruction):
+                    return None
+
+    def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:
         raise NotImplemented
 
-    def _result(self, cycle: int) -> List[Instruction]:
-        ready_instructions = []
+    def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
+        pass
+
+    def result_event(self, instruction: Instruction) -> Union[None, int]:
+        raise NotImplemented
+
+    def _result(self, cycle: int) -> Tuple[Union[int, float], Instruction]:
+        ready_instructions = None
+        minimum_cycle = float('inf')
+
         for i in self.buffer_list:
-            max_cycle = -1
-
-            if -1 in [i.stage_event.execute, i.stage_event.memory, i.stage_event.commit]:
+            ready_cycle = self.result_event(i)
+            if ready_cycle is None or ready_cycle >= cycle:
                 continue
-
-            if i.stage_event.execute is not None:
-                max_cycle = max(max_cycle, i.stage_event.execute[1])
-
-            if i.stage_event.memory is not None:
-                max_cycle = max(max_cycle, i.stage_event.memory[1])
-
-            if i.stage_event.commit is not None:
-                max_cycle = max(max_cycle, i.stage_event.commit[1])
-
-            if max_cycle == -1:
+            if minimum_cycle <= ready_cycle:
                 continue
+            if i.destination == "NOP":
+                self.remove_instruction(i)
+                continue
+            ready_instructions = i
 
-            if max_cycle < cycle:
-                ready_instructions.append(i)
-
-        return ready_instructions
+        return minimum_cycle, ready_instructions
 
     def has_result(self, cycle: int) -> bool:
-        return len(self._result(cycle)) > 0
+        return self._result(cycle)[1] is not None
 
     def peak_result(self, cycle: int):
         if not self.has_result(cycle):
@@ -103,3 +119,4 @@ class ComputationUnit:
                 self.buffer_list.remove(i)
         else:
             self.buffer_list.remove(instruction)
+

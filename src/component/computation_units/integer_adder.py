@@ -1,5 +1,7 @@
+from typing import Union
+
 from src.component.computation_units.base_class import ComputationUnit
-from src.component.intruction import Instruction, InstructionType
+from src.component.instruction import Instruction, InstructionType
 from src.component.registers.rat import RAT
 from src.helper.extract_bits import extract_rbits
 
@@ -18,6 +20,7 @@ class Branch:
         instruction.operands[1] = self.parent.rat.get(instruction.operands[1])
         instruction.operands[2] = int(instruction.operands[2])
         instruction.destination = "NOP"
+        instruction.stage_event.memory = "NOP"
         instruction.stage_event.write_back = "NOP"
         return instruction
 
@@ -86,7 +89,7 @@ class IntegerAdder(ComputationUnit):
         if instruction.type in self.branch_unit.instruction_type:
             return self.branch_unit.decode_instruction(instruction)
 
-    def step_execute(self, cycle, instruction: Instruction):
+    def step_execute_instruction(self, cycle, instruction: Instruction):
         if instruction.type in self.integer_instruction_type:
             return self.step_integer_execute(cycle, instruction)
         if instruction.type in self.branch_unit.instruction_type:
@@ -104,6 +107,7 @@ class IntegerAdder(ComputationUnit):
 
         instruction.operands[0] = self.rat.reserve_rob(instruction.operands[0])
         instruction.destination = instruction.operands[0]
+        instruction.stage_event.memory = "NOP"
         return instruction
 
     def step_integer_execute(self, cycle, instruction: Instruction):
@@ -116,3 +120,6 @@ class IntegerAdder(ComputationUnit):
             instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
             return True
         return False
+
+    def result_event(self, instruction: Instruction) -> Union[None, int]:
+        return instruction.stage_event.execute and instruction.stage_event.execute[1]

@@ -1,5 +1,8 @@
+import re
+from typing import Union, Dict
+
 from src.component.computation_units.base_class import ComputationUnit
-from src.component.intruction import Instruction, InstructionType
+from src.component.instruction import Instruction, InstructionType
 from src.component.registers.rat import RAT
 
 
@@ -12,6 +15,7 @@ class Memory(ComputationUnit):
         super().__init__(rat, latency, num_rs)
         self.latency_mem = latency_mem
         self.data = {}
+        self.execute_wait_for_result = False
 
     def decode_instruction(self, instruction: Instruction):
         instruction.operands[1] = int(instruction.operands[1])
@@ -26,42 +30,7 @@ class Memory(ComputationUnit):
             instruction.stage_event.write_back = "NOP"
         return instruction
 
-    def step(self, cycle: int):
-        execute = True
-        for instruction in self.buffer_list:
-            if instruction.stage_event.execute is None:
-                continue
-            if instruction.stage_event.execute[1] >= cycle:
-                execute = False
-
-        if execute:
-            for instruction in self.buffer_list:
-                if instruction.stage_event.issue >= cycle:
-                    continue
-
-                if instruction.result is None:
-                    if self.step_execute(cycle, instruction):
-                        break
-
-        memory = True
-        for instruction in self.buffer_list:
-            if "memory_cycles" not in instruction.related_data:
-                continue
-            if instruction.related_data["memory_cycles"][1] >= cycle:
-                memory = False
-
-        if memory:
-            for instruction in self.buffer_list:
-                if "memory_cycles" in instruction.related_data:
-                    continue
-                if instruction.stage_event.execute is None:
-                    continue
-                if instruction.stage_event.execute[1] >= cycle:
-                    continue
-                if self.step_memory(cycle, instruction):
-                    break
-
-    def step_execute(self, cycle, instruction: Instruction):
+    def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:
         if self.resolve_operand(instruction, 2):
             memory_address = instruction.operands[1] + instruction.operands[2]
             if memory_address % 4 != 0:
@@ -70,49 +39,62 @@ class Memory(ComputationUnit):
             if "memory_address" not in instruction.related_data:
                 instruction.related_data["memory_address"] = memory_address
                 instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
-                instruction.stage_event.memory = -1
                 return True
         return False
 
-    def step_memory(self, cycle, instruction: Instruction):
+    def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
         memory_address = instruction.related_data["memory_address"]
         for instr in self.buffer_list:
             if instruction.type == InstructionType.LD and instr.type == InstructionType.SD:
-                if instr.counter_index < instruction.counter_index and instr.related_data[
-                    "memory_address"] == memory_address:
+                if instr.counter_index < instruction.counter_index:
                     return False
 
         if instruction.type == InstructionType.LD:
-            instruction.result = self.data[memory_address] if memory_address in self.data else 0
+            instruction.result = self.get_memory(memory_address)
         elif instruction.type == InstructionType.SD and self.resolve_operand(instruction, 0):
-            self.data[memory_address] = instruction.operands[0]
+            self.set_memory(memory_address, instruction.operands[0])
             instruction.result = True
         else:
             return False
 
         memory_cycles = (cycle, cycle + self.latency_mem - 1)
-        instruction.related_data["memory_cycles"] = memory_cycles
-        instruction.stage_event.memory = None
         if instruction.type == InstructionType.LD:
             instruction.stage_event.memory = memory_cycles
         if instruction.type == InstructionType.SD:
+            instruction.stage_event.memory = memory_cycles
             instruction.stage_event.commit = memory_cycles
         return True
 
-    def has_result(self, cycle: int) -> bool:
-        for instr in self.buffer_list:
-            if instr.type != InstructionType.SD:
+    def set_values_from_parameters(self, parameters: Dict[str, str], remove_used=False):
+        used_keys = []
+        for key, value in parameters.items():
+            if re.fullmatch("mem\[[0-9]+]", key.lower()) is None:
                 continue
-            if instr.stage_event.commit is not None and instr.stage_event.commit[1] <= cycle:
-                self.remove_instruction(instr)
-        return super().has_result(cycle)
+            address = int(key[4:-1])
+            value = float(value)
+            if address % 4 != 0:
+                raise Exception(f"[compile time] Invalid memory address {address} % 4 != 0")
+            self.set_memory(address, value)
+            used_keys.append(key)
 
-    def peak_result(self, cycle: int):
-        self.has_result(cycle)
-        return super().peak_result(cycle)
+        if remove_used:
+            for key in used_keys:
+                del parameters[key]
 
-    def set_values_from_parameters(self, parameters):
-        pass
+    def get_memory(self, address):
+        address = int(address)
+        if address % 4 != 0:
+            raise Exception(f"[run time] Invalid memory address {address} % 4 != 0")
+        return self.data[address] if address in self.data else 0
 
-    def get(self, index, raise_error=True):
-        return None
+    def set_memory(self, address, value):
+        address = int(address)
+        if address % 4 != 0:
+            raise Exception(f"[run time] Invalid memory address {address} % 4 != 0")
+        self.data[address] = value
+
+    def result_event(self, instruction: Instruction) -> Union[None, int]:
+        if instruction.type == InstructionType.LD:
+            return instruction.stage_event.memory and instruction.stage_event.memory[1]
+        if instruction.type == InstructionType.SD:
+            return instruction.stage_event.commit and instruction.stage_event.commit[1]

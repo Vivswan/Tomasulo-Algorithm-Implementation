@@ -1,6 +1,6 @@
 from typing import List, Union, Dict
 
-from src.component.intruction import Instruction, create_copy_instruction
+from src.component.instruction import Instruction, create_copy_instruction
 
 
 class InstructionBuffer:
@@ -11,8 +11,8 @@ class InstructionBuffer:
         self.history: List[Instruction] = []
         self.code_pointers = {}
 
-        self.parameters: Dict[str, str] = {}
-        self.asserts: Dict[str, str] = {}
+        self.code_parameters: Dict[str, str] = {}
+        self.code_asserts: Dict[str, str] = {}
 
     def append_code(self, code_str: str):
         parser_code = []
@@ -31,9 +31,9 @@ class InstructionBuffer:
 
                 save_location = {}
                 if line.startswith("$"):
-                    save_location = self.parameters
+                    save_location = self.code_parameters
                 if line.startswith("!"):
-                    save_location = self.asserts
+                    save_location = self.code_asserts
 
                 line = line[1:].strip()
                 if "=" in line:

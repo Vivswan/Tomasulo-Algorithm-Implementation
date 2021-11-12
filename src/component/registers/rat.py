@@ -103,17 +103,23 @@ class RAT:
         print("ROB -               ", end="")
         self.rob.print_table()
 
-    def set_values_from_parameters(self, parameters: dict):
+    def set_values_from_parameters(self, parameters: dict, remove_used=False):
+        used_keys = []
         for key, value in parameters.items():
             reg, reg_i = self._get_index(key, use_references=False, raise_error=False)
             try:
                 if reg is self.integer_register:
                     reg[reg_i] = int(value)
+                    used_keys.append(key)
                 if reg is self.float_register:
                     reg[reg_i] = float(value)
+                    used_keys.append(key)
             except:
-                raise ValueError(f'Invalid Type of value for "{key}": found "{value}"')
+                raise ValueError(f'[compile time] Invalid type of value for "{key}": found "{value}"')
 
+        if remove_used:
+            for key in used_keys:
+                del parameters[key]
 
 if __name__ == '__main__':
     rat = RAT(3, 3, 3)
