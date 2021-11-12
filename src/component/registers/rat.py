@@ -18,8 +18,12 @@ class RAT:
         self.all_tables = [self.integer_register, self.float_register, self.rob]
         self.reference_dict = {}
 
-    def get(self, index):
-        obj, obj_index = self._get_index(index)
+    def get(self, index, raise_error=True):
+        obj, obj_index = self._get_index(index, raise_error=raise_error)
+
+        if (not raise_error) and obj is None:
+            return None
+
         value = obj[obj_index]
         if isinstance(value, ROBField) and value.finished:
             return value.value
@@ -75,7 +79,7 @@ class RAT:
 
         self.rob.remove(rob_i)
 
-    def _get_index(self, index: str, use_references=True) -> Tuple[RegisterBase, int]:
+    def _get_index(self, index: str, use_references=True, raise_error=True) -> Tuple[RegisterBase, int]:
         if index in self.reference_dict and index != self.reference_dict[index] and use_references:
             return self._get_index(self.reference_dict[index])
 
@@ -86,7 +90,10 @@ class RAT:
         if re.fullmatch("ROB[0-9]+", index) is not None:
             return self.rob, int(index.replace("ROB", ""))
 
-        raise Exception(f"Invalid Index: {index}")
+        if raise_error:
+            raise Exception(f"Invalid Index: {index}")
+        else:
+            return None, None
 
     def print_tables(self):
         print("Integer Register -  ", end="")
@@ -95,6 +102,17 @@ class RAT:
         self.float_register.print_table()
         print("ROB -               ", end="")
         self.rob.print_table()
+
+    def set_values_from_parameters(self, parameters: dict):
+        for key, value in parameters.items():
+            reg, reg_i = self._get_index(key, use_references=False, raise_error=False)
+            try:
+                if reg is self.integer_register:
+                    reg[reg_i] = int(value)
+                if reg is self.float_register:
+                    reg[reg_i] = float(value)
+            except:
+                raise ValueError(f'Invalid Type of value for "{key}": found "{value}"')
 
 
 if __name__ == '__main__':

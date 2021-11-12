@@ -15,6 +15,9 @@ class ComputationUnit:
         self.buffer_limit: int = num_rs
         self.buffer_list: List[Instruction] = []
 
+    def is_empty(self) -> bool:
+        return len(self.buffer_list) == 0
+
     def is_full(self) -> bool:
         return not (len(self.buffer_list) < self.buffer_limit)
 

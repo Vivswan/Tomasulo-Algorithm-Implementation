@@ -1,4 +1,4 @@
-from typing import List, Union
+from typing import List, Union, Dict
 
 from src.component.intruction import Instruction, create_copy_instruction
 
@@ -10,7 +10,9 @@ class InstructionBuffer:
         self.pointer: int = 0
         self.history: List[Instruction] = []
         self.code_pointers = {}
-        self.parameters = {}
+
+        self.parameters: Dict[str, str] = {}
+        self.asserts: Dict[str, str] = {}
 
     def append_code(self, code_str: str):
         parser_code = []
@@ -23,13 +25,20 @@ class InstructionBuffer:
             if line.startswith("#"):
                 continue
 
-            if line.startswith("$"):
+            if line.startswith("$") or line.startswith("!"):
                 if len(self.full_code) > 0:
-                    raise Exception("$ should be before all instructions")
+                    raise Exception(f"{line[0]} should be before all instructions")
+
+                save_location = {}
+                if line.startswith("$"):
+                    save_location = self.parameters
+                if line.startswith("!"):
+                    save_location = self.asserts
+
                 line = line[1:].strip()
                 if "=" in line:
                     [key, value] = line.split("=")
-                    self.parameters[key.strip()] = value.strip()
+                    save_location[key.strip()] = value.strip()
                 continue
 
             index = len(parser_code) + len(self.full_code)
@@ -42,6 +51,7 @@ class InstructionBuffer:
             for key, value in self.code_pointers.items():
                 if key in line:
                     line = line.replace(key, str(value - index - 1))
+
             instruction = Instruction(line, index=index)
             parser_code.append(instruction)
         self.full_code += parser_code

@@ -1,7 +1,8 @@
 import ast
 import copy
-from typing import List
+from typing import List, Tuple
 
+from src.assert_result import AssertResult
 from src.component.computation_units.base_class import ComputationUnit
 from src.component.computation_units.float_adder import FloatAdder
 from src.component.computation_units.float_multiplier import FloatMultiplier
@@ -18,52 +19,58 @@ class Tomasulo:
 
     def __init__(self, full_code):
         self.instruction_list: List[Instruction] = []
+        self.parameters = copy.deepcopy(TOMASULO_DEFAULT_PARAMETERS)
         self.instruction_buffer = InstructionBuffer()
         self.instruction_buffer.append_code(full_code)
-        for key, value in self.instruction_buffer.parameters.items():
-            if key in TOMASULO_DEFAULT_PARAMETERS:
-                parsed_value = ast.literal_eval(value)
-                if not isinstance(parsed_value, type(TOMASULO_DEFAULT_PARAMETERS[key])):
-                    raise ValueError(
-                        f'Invalid type for "{key}"'
-                        f', expected: {type(TOMASULO_DEFAULT_PARAMETERS[key])}'
-                        f', got: {type(parsed_value)}'
-                    )
-                TOMASULO_DEFAULT_PARAMETERS[key] = parsed_value
+        self.set_parameters(self.instruction_buffer.parameters)
 
         self.rat = RAT(
-            num_integer_register=TOMASULO_DEFAULT_PARAMETERS["num_register"],
-            num_float_register=TOMASULO_DEFAULT_PARAMETERS["num_register"],
-            num_rob=TOMASULO_DEFAULT_PARAMETERS["num_rob"]
+            num_integer_register=self.parameters["num_register"],
+            num_float_register=self.parameters["num_register"],
+            num_rob=self.parameters["num_rob"]
         )
+        self.rat.set_values_from_parameters(self.instruction_buffer.parameters)
 
         self.integer_adder = IntegerAdder(
             rat=self.rat,
-            latency=TOMASULO_DEFAULT_PARAMETERS["integer_adder_latency"],
-            num_rs=TOMASULO_DEFAULT_PARAMETERS["integer_adder_rs"]
+            latency=self.parameters["integer_adder_latency"],
+            num_rs=self.parameters["integer_adder_rs"]
         )
         self.float_adder = FloatAdder(
             rat=self.rat,
-            latency=TOMASULO_DEFAULT_PARAMETERS["float_adder_latency"],
-            num_rs=TOMASULO_DEFAULT_PARAMETERS["float_adder_rs"]
+            latency=self.parameters["float_adder_latency"],
+            num_rs=self.parameters["float_adder_rs"]
         )
         self.float_multiplier = FloatMultiplier(
             rat=self.rat,
-            latency=TOMASULO_DEFAULT_PARAMETERS["float_multiplier_latency"],
-            num_rs=TOMASULO_DEFAULT_PARAMETERS["float_multiplier_rs"]
+            latency=self.parameters["float_multiplier_latency"],
+            num_rs=self.parameters["float_multiplier_rs"]
         )
         self.memory_unit = Memory(
             rat=self.rat,
-            latency=TOMASULO_DEFAULT_PARAMETERS["memory_unit_latency"],
-            latency_mem=TOMASULO_DEFAULT_PARAMETERS["memory_unit_latency_mem"],
-            num_rs=TOMASULO_DEFAULT_PARAMETERS["memory_unit_rs"]
+            latency=self.parameters["memory_unit_latency"],
+            latency_mem=self.parameters["memory_unit_latency_mem"],
+            num_rs=self.parameters["memory_unit_rs"]
         )
+        self.memory_unit.set_values_from_parameters(self.instruction_buffer.parameters)
         self.computational_units: List[ComputationUnit] = [
             self.integer_adder,
             self.float_adder,
             self.float_multiplier,
             self.memory_unit,
         ]
+
+    def set_parameters(self, parameters: dict):
+        for key, value in parameters.items():
+            if key in self.parameters:
+                parsed_value = ast.literal_eval(value)
+                if not isinstance(parsed_value, type(self.parameters[key])):
+                    raise ValueError(
+                        f'Invalid type for "{key}"'
+                        f', expected: {type(self.parameters[key])}'
+                        f', got: {type(parsed_value)}'
+                    )
+                self.parameters[key] = parsed_value
 
     def assign_computational_unit(self):
         for instruction in self.instruction_buffer.full_code:
@@ -127,18 +134,18 @@ class Tomasulo:
 
     def execute(self):
         for i in self.computational_units:
-            i.step(self._cycle)
+            i.step(self.get_cycle())
 
     def write_back(self):
         compute_unit = []
         for i in self.computational_units:
-            if i.has_result(self._cycle):
-                for j in i.peak_result(self._cycle):
+            if i.has_result(self.get_cycle()):
+                for j in i.peak_result(self.get_cycle()):
                     compute_unit.append((j.stage_event.execute[1], i, j))
 
         compute_unit.sort(key=lambda x: x[0])
 
-        for i in compute_unit[:TOMASULO_DEFAULT_PARAMETERS["num_cbd"]]:
+        for i in compute_unit[:self.parameters["num_cbd"]]:
             instruction = i[2]
             i[1].remove_instruction(instruction)
 
@@ -151,7 +158,7 @@ class Tomasulo:
                 if rob_entry in instr.operands:
                     instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
 
-            instruction.stage_event.write_back = self._cycle
+            instruction.stage_event.write_back = self.get_cycle()
 
     def commit(self):
         instruction = None
@@ -159,14 +166,14 @@ class Tomasulo:
             if not instr.execution:
                 continue
             if instr.stage_event.commit is not None:
-                if instr.stage_event.commit[1] >= self._cycle:
+                if instr.stage_event.commit[1] >= self.get_cycle():
                     break
                 else:
                     continue
             if instr.stage_event.write_back is not None:
                 if instr.stage_event.write_back == "NOP":
                     instruction = instr
-                elif instr.stage_event.write_back < self._cycle:
+                elif instr.stage_event.write_back < self.get_cycle():
                     instruction = instr
                     self.rat.commit_rob(instr.destination)
             break
@@ -174,7 +181,7 @@ class Tomasulo:
         if instruction is None:
             return None
 
-        instruction.stage_event.commit = (self._cycle, self._cycle)
+        instruction.stage_event.commit = (self.get_cycle(), self.get_cycle())
 
     def step(self):
         self.issue()
@@ -187,8 +194,42 @@ class Tomasulo:
         return self._cycle
 
     def is_working(self):
-        # TODO
-        return self.instruction_buffer.peak() is not None
+        if self.instruction_buffer.peak() is not None:
+            return True
+        if any([not i.is_empty() for i in self.computational_units]):
+            return True
+
+        for i in reversed(self.instruction_buffer.history):
+            if i.execution and (i.stage_event.commit is None or i.stage_event.commit[1] >= self.get_cycle()):
+                return True
+
+        return False
+
+    def run(self):
+        while self.is_working():
+            self.step()
+        return self
+
+    def check_asserts(self) -> Tuple[bool, List[AssertResult]]:
+        assert_list = []
+        for check_key, check_value in self.instruction_buffer.asserts.items():
+            value = None
+            if check_key == "cycle":
+                value = self.get_cycle()
+
+            if value is None:
+                value = self.rat.get(check_key, raise_error=False)
+            if value is None:
+                value = self.memory_unit.get(check_key, raise_error=False)
+
+            append_value = AssertResult(
+                result=check_value == str(value),
+                key=check_key,
+                check_value=check_value,
+                value=str(value)
+            )
+            assert_list.append(append_value)
+        return all(i.result for i in assert_list), assert_list
 
 
 if __name__ == '__main__':
@@ -212,7 +253,7 @@ if __name__ == '__main__':
         # BNE R1, R2, 
     """
     tomasulo = Tomasulo(code)
-    while tomasulo._cycle < 500:
+    while tomasulo.get_cycle() < 500:
         tomasulo.step()
     print()
     for k in tomasulo.instruction_buffer.history:

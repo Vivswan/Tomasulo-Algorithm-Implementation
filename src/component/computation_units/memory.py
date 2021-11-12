@@ -110,3 +110,9 @@ class Memory(ComputationUnit):
     def peak_result(self, cycle: int):
         self.has_result(cycle)
         return super().peak_result(cycle)
+
+    def set_values_from_parameters(self, parameters):
+        pass
+
+    def get(self, index, raise_error=True):
+        return None

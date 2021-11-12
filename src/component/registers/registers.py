@@ -17,15 +17,9 @@ class RegisterBase(Generic[T]):
     def __getitem__(self, key):
         return self.data[key]
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value: T):
         if key != 0:
             self.data[key] = value
-
-    def set_full_data(self, values):
-        if len(values) + 1 != len(self.data):
-            raise Exception(f"Invalid size of list, expected: {len(self.data) - 1}")
-
-        self.data = [0] + list(values)
 
     def print_table(self):
         for i, v in enumerate(self.data):
