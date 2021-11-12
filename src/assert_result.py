@@ -10,4 +10,5 @@ class AssertResult:
     value: Union[str, int, float, bool]
 
     def __repr__(self) -> str:
-        return f"{self.key} ({self.result}): {self.check_value} {'==' if self.result else '!='} {self.value}"
+        return str(self.result).ljust(
+            5) + f" - {self.key}: {self.check_value} {'==' if self.result else '!='} {self.value}"

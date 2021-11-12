@@ -113,6 +113,13 @@ class Tomasulo:
             if self.rat.rob.is_full():
                 return None
 
+        # this figures out which computational unit the instruction goes to.
+        if peak_instruction.computation_unit is None:
+            Exception(f'"{peak_instruction.type}" instruction has not been implemented by any computational unit')
+
+        if peak_instruction.computation_unit.is_full():
+            return None
+
         # Makes a Copy of the RAT Table and stores it with the branch instruction
         instruction = self.instruction_buffer.pop()
         instruction.related_data["rat_copy"] = copy.deepcopy(self.rat)
@@ -120,13 +127,6 @@ class Tomasulo:
         # The predictions has been made on the outcome of the branch instruction.
         if instruction.type in self.integer_adder.branch_unit.instruction_type:
             self.instruction_buffer.pointer += self.integer_adder.branch_unit.predict(instruction)
-
-        # this figures out which computational unit the instruction goes to.
-        if instruction.computation_unit is None:
-            Exception(f'"{instruction.type}" instruction has not been implemented by any computational unit')
-
-        if instruction.computation_unit.is_full():
-            return None
 
         instruction.computation_unit.decode_instruction(instruction)
         instruction.stage_event.issue = self._cycle

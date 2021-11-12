@@ -1,7 +1,8 @@
 $ R1 = 3
 ! R2 = 3
+! cycle = 19
 
 Loop: ADDI R2, R2, 1
 SUBI R3, R3, 1
 BNE R1, R2, Loop
-#SUBI R4, R4, 1
+SUBI R4, R4, 1
