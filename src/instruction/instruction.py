@@ -4,7 +4,7 @@ from enum import Enum
 from typing import List, Union, TypeVar, Generic
 
 # from src.component.computation_units.base_class import ComputationUnit
-from src.component.events import StageEvent
+from src.instruction.events import StageEvent
 
 T = TypeVar('T')
 operand_types = Union[str, int, float, bool]

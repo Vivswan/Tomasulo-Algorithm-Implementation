@@ -2,15 +2,15 @@ import ast
 import copy
 from typing import List, Tuple
 
-from src.assert_result import AssertResult
-from src.component.computation_units.base_class import ComputationUnit
-from src.component.computation_units.float_adder import FloatAdder
-from src.component.computation_units.float_multiplier import FloatMultiplier
-from src.component.computation_units.integer_adder import IntegerAdder
-from src.component.computation_units.memory import Memory
-from src.component.instruction_buffer import InstructionBuffer
-from src.component.registers.rat import RAT
+from src.computation_units.base_class import ComputationUnit
+from src.computation_units.float_adder import FloatAdder
+from src.computation_units.float_multiplier import FloatMultiplier
+from src.computation_units.integer_adder import IntegerAdder
+from src.computation_units.memory import Memory
 from src.default_parameters import TOMASULO_DEFAULT_PARAMETERS
+from src.instruction.assert_result import AssertResult
+from src.instruction.instruction_buffer import InstructionBuffer
+from src.registers.rat import RAT
 
 
 class Tomasulo:
@@ -49,10 +49,13 @@ class Tomasulo:
         self.memory_unit = Memory(
             rat=self.rat,
             latency=self.parameters["memory_unit_latency"],
-            latency_mem=self.parameters["memory_unit_latency_mem"],
+            ram_latency=self.parameters["memory_unit_ram_latency"],
+            cache_latency=self.parameters["memory_unit_cache_latency"],
+            ram_size=self.parameters["memory_unit_ram_size"],
+            cache_size=self.parameters["memory_unit_cache_size"],
             num_rs=self.parameters["memory_unit_rs"]
         )
-        self.memory_unit.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
+        self.memory_unit.ram.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
         self.computational_units: List[ComputationUnit] = [
             self.integer_adder,
             self.float_adder,
@@ -201,7 +204,7 @@ class Tomasulo:
     def run(self):
         while self.is_working():
             self.step()
-            if self.get_cycle() > 10000:
+            if self.get_cycle() > 1e4:
                 break
         return self
 
@@ -215,7 +218,7 @@ class Tomasulo:
             if value is None:
                 value = self.rat.get(check_key, raise_error=False)
             if value is None:
-                value = self.memory_unit.get(check_key, raise_error=False)
+                value = self.memory_unit.ram.get_value(check_key, raise_error=False)
 
             append_value = AssertResult(
                 result=check_value == str(value),

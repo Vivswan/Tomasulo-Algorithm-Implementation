@@ -1,6 +1,6 @@
 from typing import List, Union, Dict
 
-from src.component.instruction import Instruction, create_copy_instruction
+from src.instruction.instruction import Instruction, create_copy_instruction
 
 
 class InstructionBuffer:

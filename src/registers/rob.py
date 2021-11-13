@@ -2,7 +2,7 @@ import math
 from dataclasses import dataclass
 from typing import Union
 
-from src.component.registers.registers import RegisterBase
+from src.registers.registers import RegisterBase
 
 
 @dataclass

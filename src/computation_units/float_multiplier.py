@@ -1,7 +1,7 @@
 from typing import Union
 
-from src.component.computation_units.base_class import ComputationUnit
-from src.component.instruction import Instruction, InstructionType
+from src.computation_units.base_class import ComputationUnit
+from src.instruction.instruction import Instruction, InstructionType
 
 
 class FloatMultiplier(ComputationUnit):

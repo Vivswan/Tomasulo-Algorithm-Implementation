@@ -1,8 +1,8 @@
 from typing import Set, List, Union, Tuple
 
-from src.component.instruction import InstructionType, Instruction
-from src.component.registers.rat import RAT
-from src.component.registers.rob import ROBField
+from src.instruction.instruction import InstructionType, Instruction
+from src.registers.rat import RAT
+from src.registers.rob import ROBField
 
 
 class ComputationUnit:

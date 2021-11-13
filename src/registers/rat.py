@@ -1,8 +1,8 @@
 import re
 from typing import Tuple
 
-from src.component.registers.registers import IntegerRegister, FloatRegister, RegisterBase
-from src.component.registers.rob import ROB, ROBField
+from src.registers.registers import IntegerRegister, FloatRegister, RegisterBase
+from src.registers.rob import ROB, ROBField
 
 
 class RAT:

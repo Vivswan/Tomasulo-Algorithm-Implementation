@@ -1,9 +1,9 @@
 from typing import Union
 
-from src.component.computation_units.base_class import ComputationUnit
-from src.component.instruction import Instruction, InstructionType
-from src.component.registers.rat import RAT
+from src.computation_units.base_class import ComputationUnit
 from src.helper.extract_bits import extract_rbits
+from src.instruction.instruction import Instruction, InstructionType
+from src.registers.rat import RAT
 
 
 class Branch:
