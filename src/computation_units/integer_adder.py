@@ -19,6 +19,7 @@ class Branch:
         instruction.operands[0] = self.parent.rat.get(instruction.operands[0])
         instruction.operands[1] = self.parent.rat.get(instruction.operands[1])
         instruction.operands[2] = int(instruction.operands[2])
+        instruction.related_data['branch_prediction_accurate'] = None
         instruction.destination = "NOP"
         instruction.stage_event.memory = "NOP"
         instruction.stage_event.write_back = "NOP"
@@ -45,15 +46,15 @@ class Branch:
 
     # Updates in the execute stage and checks for misprediction
     def check_prediction(self, instruction: Instruction, equality):
-        instruction.branch_prediction_accurate = True
+        instruction.related_data['branch_prediction_accurate'] = True
 
-        if instruction.type is InstructionType.BEQ and instruction.branch_jump == (equality == 0):
+        if instruction.type is InstructionType.BEQ and instruction.related_data["branch_jump"] == (equality == 0):
             return None
 
-        if instruction.type is InstructionType.BNE and instruction.branch_jump == (equality != 0):
+        if instruction.type is InstructionType.BNE and instruction.related_data["branch_jump"] == (equality != 0):
             return None
 
-        instruction.branch_prediction_accurate = False
+        instruction.related_data['branch_prediction_accurate'] = False
         instruction.related_data['branch_correction'] = True
 
         num_int = extract_rbits(instruction.index, self.btb_limit)
@@ -65,9 +66,9 @@ class Branch:
             raise Exception("instruction type is not a branch")
 
         num_int = extract_rbits(instruction.index, self.btb_limit)
-        instruction.branch_jump = self.btb_table[num_int]
+        instruction.related_data["branch_jump"] = self.btb_table[num_int]
 
-        if instruction.branch_jump:
+        if instruction.related_data["branch_jump"]:
             return int(instruction.operands[2])
         else:
             return 0

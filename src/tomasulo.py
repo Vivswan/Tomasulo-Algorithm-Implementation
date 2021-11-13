@@ -126,7 +126,7 @@ class Tomasulo:
             return None
 
         instruction = self.instruction_buffer.pop()
-        instruction.stage_event.issue = self._cycle
+        instruction.stage_event.issue = self.get_cycle()
         instruction.computation_unit.decode_instruction(instruction)
         instruction.computation_unit.issue_instruction(instruction)
 
@@ -233,6 +233,7 @@ class Tomasulo:
 if __name__ == '__main__':
     code = """
         $Mem[0] = 4
+        $R2 = 4
         # ADD R1, R2, R3 
         # SUB R1, R1, R3 
         # ADDI R1, R2, 5
@@ -246,7 +247,7 @@ if __name__ == '__main__':
         MULTD R3 R3 R3 
         # ADDI R1, R2, 5
         SD R1 8(R2) 
-        SD R1 8(R3) 
+        SD R2 8(R3) 
         SD R1 8(R2) 
         SD R1 8(R2) 
         ADDI R1, R2, 5

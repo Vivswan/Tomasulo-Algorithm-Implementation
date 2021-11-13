@@ -119,4 +119,3 @@ class ComputationUnit:
                 self.buffer_list.remove(i)
         else:
             self.buffer_list.remove(instruction)
-

@@ -121,6 +121,7 @@ class RAT:
             for key in used_keys:
                 del parameters[key]
 
+
 if __name__ == '__main__':
     rat = RAT(3, 3, 3)
     rat.integer_register.set_full_data([3, 2, 1])

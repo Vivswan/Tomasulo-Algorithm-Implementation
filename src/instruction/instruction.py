@@ -3,7 +3,6 @@ import re
 from enum import Enum
 from typing import List, Union, TypeVar, Generic
 
-# from src.component.computation_units.base_class import ComputationUnit
 from src.instruction.events import StageEvent
 
 T = TypeVar('T')
@@ -44,20 +43,18 @@ class Instruction(Generic[T]):
             raise Exception(f'Invalid instruction type: "{instruction_type}"')
 
         self.instruction: str = instruction_str
-        self.computation_unit: 'ComputationUnit' = None
+
         self.counter_index: int = -1
         self.index: int = index
         self.execution: bool = True
-
-        # issue
-        self.branch_jump: bool = None
-        self.branch_prediction_accurate: bool = None  # placeholder
+        self.computation_unit: 'ComputationUnit' = None
 
         self.type: InstructionType = getattr(InstructionType, instruction_type)
         self.operands: List[operand_types] = operands
         self.stage_event = StageEvent()
         self.result: T = None
         self.destination: str = None
+
         self.related_data: dict = {}
 
     def __repr__(self):
@@ -71,8 +68,8 @@ class Instruction(Generic[T]):
         result += f", destination={self.destination}"
         result += f", operands={self.operands}"
         if self.type in [InstructionType.BEQ, InstructionType.BNE]:
-            result += f", prediction ({self.branch_prediction_accurate})" \
-                      f": {'branch' if self.branch_jump else 'continue'}"
+            result += f", prediction ({self.related_data['branch_prediction_accurate']})" \
+                      f": {'branch' if self.related_data['branch_jump'] else 'continue'}"
         return result
 
 

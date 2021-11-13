@@ -1,9 +1,11 @@
 $ R1 = 3
-$ integer_adder_latency = 1
+$ F1 = 5
+$ mem[4] = 3
+
 ! R2 = 3
-! cycle = 22
+! R4 = -1
+#! cycle = 22
 
 Loop: ADDI R2, R2, 1
-SUBI R3, R3, 1
 BNE R1, R2, Loop
 SUBI R4, R4, 1
