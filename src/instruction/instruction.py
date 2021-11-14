@@ -120,7 +120,7 @@ def print_str_instructions(instructions: List[Instruction]):
     for i in rows:
         for j, v in enumerate(i):
             if lengths[j] < len(str(v)):
-                lengths[j] = len(str(v)) + 5
+                lengths[j] = len(str(v)) + 6
 
     lengths[0] = 2
     lengths[rows[0].index("Instruction")] += 6
@@ -130,4 +130,7 @@ def print_str_instructions(instructions: List[Instruction]):
     for i, v in enumerate(rows):
         r = format_str.format(*v)
         result_str += (r if strike_row[i] else strike(r)) + "\n"
+        if i == 0:
+            d = "." * len(r) + "\n"
+            result_str = result_str + d
     return result_str

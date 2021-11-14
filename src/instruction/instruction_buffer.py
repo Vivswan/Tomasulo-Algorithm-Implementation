@@ -1,6 +1,6 @@
 from typing import List, Union, Dict
 
-from src.instruction.instruction import Instruction, create_copy_instruction
+from src.instruction.instruction import Instruction, create_copy_instruction, print_str_instructions
 
 
 class InstructionBuffer:
@@ -76,3 +76,6 @@ class InstructionBuffer:
         self.counter += 1
         self.history.append(instr)
         return instr
+
+    def print_str_history_table(self):
+        return print_str_instructions(self.history)
