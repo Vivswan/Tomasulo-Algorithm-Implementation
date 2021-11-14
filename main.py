@@ -34,7 +34,7 @@ if __name__ == '__main__':
         max_length = max(*[len(i.replace(STRIKE_CHAR, "").strip()) for i in str_result.split("\n")])
         str_result = "\n".join([
             (
-                i.replace("%", "-" * int((max_length - len(i)) / 2 + 2)) if "%" in i else i
+                i.rstrip().replace("%", "-" * int((max_length - len(i)) / 2 + 2)) if "%" in i else i.rstrip()
             ) for i in str_result.split("\n")
         ])
         max_length = max(*[len(i.strip().replace(STRIKE_CHAR, "")) for i in str_result.split("\n")])
