@@ -6,12 +6,18 @@ from unit_tests import test_codes
 
 if __name__ == '__main__':
     for test_case in [0]:
+        print()
         print(f"Running Test Case {test_case}...")
         str_result = ""
         code = test_codes[test_case]
         tomasulo = Tomasulo(code).run()
 
-        print("\n".join([str(i) for i in tomasulo.instruction_buffer.history]) + "\n")
+        str_result += "Code: \n"
+        str_result += code
+        str_result += "\n"
+
+        str_result += "Execution: \n"
+        # print("\n".join([str(i) for i in tomasulo.instruction_buffer.history]) + "\n")
         str_result += print_str_instructions(tomasulo.instruction_buffer.history)
         str_result += "\n"
 
