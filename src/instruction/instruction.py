@@ -55,25 +55,30 @@ class Instruction(Generic[T]):
         self.result: T = None
         self.destination: str = None
 
+        self.prev: 'Instruction' = None
         self.related_data: dict = {}
 
     def __repr__(self):
         result = str(self.index).ljust(3)
         result += " " + str(self.counter_index).ljust(3)
         result += " " + self.instruction
-        result += f", unit={self.computation_unit.__class__.__name__}"
-        result += f", execution={self.execution}"
+        # result += f", unit={self.computation_unit.__class__.__name__}"
+        # result += f", execution={self.execution}"
         result += f", result={self.result}"
+        if self.type in [InstructionType.LD, InstructionType.SD]:
+            result += f", address: {self.related_data['memory_address']}"
+
         result += f", event=[{self.stage_event}]"
         result += f", destination={self.destination}"
         result += f", operands={self.operands}"
         if self.type in [InstructionType.BEQ, InstructionType.BNE]:
             result += f", prediction ({self.related_data['branch_prediction_accurate']})" \
                       f": {'branch' if self.related_data['branch_jump'] else 'continue'}"
+
         return result
 
 
-def create_copy_instruction(instruction):
+def create_copy_instruction(instruction: Instruction) -> Instruction:
     result = copy.deepcopy(instruction)
     result.computation_unit = instruction.computation_unit
     return result

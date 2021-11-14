@@ -50,12 +50,11 @@ class Tomasulo:
             rat=self.rat,
             latency=self.parameters["memory_unit_latency"],
             ram_latency=self.parameters["memory_unit_ram_latency"],
-            cache_latency=self.parameters["memory_unit_cache_latency"],
+            queue_latency=self.parameters["memory_unit_queue_latency"],
             ram_size=self.parameters["memory_unit_ram_size"],
-            cache_size=self.parameters["memory_unit_cache_size"],
-            num_rs=self.parameters["memory_unit_rs"]
+            queue_size=self.parameters["memory_unit_queue_size"]
         )
-        self.memory_unit.ram.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
+        self.memory_unit.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
         self.computational_units: List[ComputationUnit] = [
             self.integer_adder,
             self.float_adder,
@@ -218,7 +217,7 @@ class Tomasulo:
             if value is None:
                 value = self.rat.get(check_key, raise_error=False)
             if value is None:
-                value = self.memory_unit.ram.get_value(check_key, raise_error=False)
+                value = self.memory_unit.get_value(check_key)
 
             append_value = AssertResult(
                 result=check_value == str(value),
@@ -233,28 +232,13 @@ class Tomasulo:
 if __name__ == '__main__':
     code = """
         $Mem[0] = 4
-        $R2 = 4
-        # ADD R1, R2, R3 
-        # SUB R1, R1, R3 
-        # ADDI R1, R2, 5
-        # ADDD F1, F2, F3 
-        # SUB.D F1, F2, F3 
-        # SUBi R1, R2, 5
-
-        # LD R1 0(R2) 
-        # LD R1 0(R2) 
-        LD R3 0(R2)
-        MULTD R3 R3 R3 
-        # ADDI R1, R2, 5
-        SD R1 8(R2) 
-        SD R2 8(R3) 
-        SD R1 8(R2) 
-        SD R1 8(R2) 
-        ADDI R1, R2, 5
-        LD R1 8(R2) 
-        LD R1 8(R2) 
-        # BEQ R1, R2, 2
-        # BNE R1, R2, 
+        LD R1 0(R2)
+        LD R1 4(R2)
+        LD R1 0(R2)
+        SD R0 8(R2)
+        SD R1 12(R2)
+        LD R1 0(R2)
+        LD R1 8(R2)
     """
     tomasulo = Tomasulo(code).run()
     print()

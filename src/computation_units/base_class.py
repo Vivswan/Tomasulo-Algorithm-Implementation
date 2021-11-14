@@ -62,27 +62,10 @@ class ComputationUnit:
                     return None
 
     def step_memory(self, cycle: int):
-        for instruction in self.buffer_list:
-            if instruction.stage_event.memory is None or instruction.stage_event.memory == "NOP":
-                continue
-            if instruction.stage_event.memory[1] >= cycle:
-                return
-
-        for instruction in self.buffer_list:
-            if instruction.stage_event.execute is None:
-                continue
-            if instruction.stage_event.execute[1] >= cycle:
-                continue
-
-            if instruction.stage_event.memory is None:
-                if self.step_memory_instruction(cycle, instruction):
-                    return None
+        pass
 
     def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:
         raise NotImplemented
-
-    def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
-        pass
 
     def result_event(self, instruction: Instruction) -> Union[None, int]:
         raise NotImplemented

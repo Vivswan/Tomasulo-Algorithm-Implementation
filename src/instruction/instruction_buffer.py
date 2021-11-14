@@ -26,7 +26,7 @@ class InstructionBuffer:
                 continue
 
             if line.startswith("$") or line.startswith("!"):
-                if len(self.full_code) > 0:
+                if len(self.full_code) > 0 or len(parser_code) > 0:
                     raise Exception(f"{line[0]} should be before all instructions")
 
                 save_location = {}
@@ -67,6 +67,11 @@ class InstructionBuffer:
             return None
         instr = create_copy_instruction(self.peak())
         instr.counter_index = self.counter
+        for i in reversed(self.history):
+            if i.execution:
+                instr.prev = i
+                break
+
         self.pointer += 1
         self.counter += 1
         self.history.append(instr)

@@ -6,17 +6,36 @@ from src.instruction.instruction import Instruction, InstructionType
 from src.registers.rat import RAT
 
 
-class RAM:
-    def __init__(self, ram_size: int, cache_size: int, ram_latency: int, cache_latency: int):
+class Memory(ComputationUnit):
+    instruction_type = [InstructionType.LD, InstructionType.SD]
+    require_rob = [InstructionType.LD]
+
+    def __init__(
+            self,
+            rat: RAT,
+            latency: int,
+            ram_size: int,
+            ram_latency: int,
+            queue_latency: int,
+            queue_size: int
+    ):
+        super().__init__(rat, latency, queue_size)
         self.ram_size = ram_size
-        self.cache_size = cache_size
+        self.queue_size = queue_size
         self.ram_latency = ram_latency
-        self.cache_latency = cache_latency
+        self.cache_latency = queue_latency
+        self.execute_wait_for_result = False
 
         self.data = [0] * ram_size
         self.to_set_data = []
 
-        self.instruction_queue = []
+        self.load_store_queue = []
+
+    def issue_instruction(self, instruction: Instruction):
+        super().issue_instruction(instruction)
+        self.load_store_queue.append(instruction)
+        while len(self.load_store_queue) > self.queue_size:
+            self.load_store_queue.pop(0)
 
     def set_values_from_parameters(self, parameters: Dict[str, str], remove_used=False):
         used_keys = []
@@ -38,53 +57,15 @@ class RAM:
         address = int(address)
         if address % 4 != 0:
             raise Exception(f"[run time] Invalid memory address {address} % 4 != 0")
+        address = int(address / 4)
         return self.data[address] if address in self.data else 0
 
     def set_value(self, address, value):
         address = int(address)
         if address % 4 != 0:
             raise Exception(f"[run time] Invalid memory address {address} % 4 != 0")
+        address = int(address / 4)
         self.data[address] = value
-
-    def step(self, cycle: int):
-        to_remove = []
-        for i in self.to_set_data:
-            in_cycle, address, value = i
-            if in_cycle > cycle:
-                self.set_value(address, value)
-                to_remove.append(i)
-
-        for i in to_remove:
-            self.to_set_data.remove(i)
-
-    def load_address(self, cycle: int, instruction: Instruction):
-        memory_address = instruction.related_data["memory_address"]
-        instruction.result = self.get_value(memory_address)
-        instruction.stage_event.memory = (cycle, cycle + self.ram_latency - 1)
-
-    def store_address(self, cycle: int, instruction: Instruction):
-        memory_address = instruction.related_data["memory_address"]
-        instruction.stage_event.memory = (cycle, cycle + self.ram_latency - 1)
-        self.to_set_data.append((instruction.stage_event.memory[1], memory_address, instruction.operands[0]))
-
-
-class Memory(ComputationUnit):
-    instruction_type = [InstructionType.LD, InstructionType.SD]
-    require_rob = [InstructionType.LD]
-
-    def __init__(
-            self,
-            rat: RAT,
-            latency: int,
-            ram_size: int,
-            cache_size: int,
-            ram_latency: int,
-            cache_latency: int,
-            num_rs: int
-    ):
-        super().__init__(rat, latency, num_rs)
-        self.ram = RAM(ram_size, cache_size, ram_latency, cache_latency)
-        self.execute_wait_for_result = False
 
     def decode_instruction(self, instruction: Instruction):
         instruction.operands[1] = int(instruction.operands[1])
@@ -100,10 +81,6 @@ class Memory(ComputationUnit):
             instruction.stage_event.write_back = "NOP"
         return instruction
 
-    def step_memory(self, cycle: int):
-        self.ram.step(cycle)
-        super().step_memory(cycle)
-
     def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:
         if self.resolve_operand(instruction, 2):
             memory_address = instruction.operands[1] + instruction.operands[2]
@@ -116,23 +93,45 @@ class Memory(ComputationUnit):
                 return True
         return False
 
-    def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
-        for instr in self.buffer_list:
-            # if instruction.type != InstructionType.LD or instr.type != InstructionType.SD:
-            #     continue
-            if instruction.counter_index > instr.counter_index:
-                return False
+    def step_memory(self, cycle: int):
+        to_compute: Instruction = None
 
-        if instruction.type == InstructionType.LD:
-            self.ram.load_address(cycle, instruction)
-            return True
+        for check in self.buffer_list:
+            if "memory_address" not in check.related_data:
+                return None
+            if check.stage_event.memory is None:
+                to_compute = check
+                break
+            if check.stage_event.memory[1] >= cycle:
+                return None
 
-        if instruction.type == InstructionType.SD and self.resolve_operand(instruction, 0):
-            self.ram.store_address(cycle, instruction)
-            instruction.stage_event.commit = instruction.stage_event.memory
-            return True
+        if to_compute is None:
+            return None
 
-        return False
+        latency = self.ram_latency
+        if to_compute.type == InstructionType.LD:
+            for check in reversed(self.load_store_queue[:self.load_store_queue.index(to_compute)]):
+                if check.related_data["memory_address"] == to_compute.related_data["memory_address"]:
+                    if check.type == InstructionType.LD:
+                        to_compute.result = check.result
+                    if check.type == InstructionType.SD:
+                        to_compute.result = check.operands[0]
+                    latency = self.cache_latency
+                    break
+            if to_compute.result is None:
+                to_compute.result = self.get_value(to_compute.related_data["memory_address"])
+            to_compute.stage_event.memory = (cycle, cycle + latency - 1)
+
+        if to_compute.type == InstructionType.SD:
+            if to_compute.prev is not None:
+                if to_compute.prev.stage_event.commit is None:
+                    return None
+                if to_compute.prev.stage_event.commit[1] >= cycle:
+                    return None
+
+            self.set_value(to_compute.related_data["memory_address"], to_compute.operands[0])
+            to_compute.stage_event.memory = (cycle, cycle + latency - 1)
+            to_compute.stage_event.commit = to_compute.stage_event.memory
 
     def result_event(self, instruction: Instruction) -> Union[None, int]:
         if instruction.type == InstructionType.LD:

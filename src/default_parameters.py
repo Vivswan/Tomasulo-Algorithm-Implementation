@@ -14,8 +14,7 @@ TOMASULO_DEFAULT_PARAMETERS = {
 
     "memory_unit_latency": 1,
     "memory_unit_ram_latency": 4,
-    "memory_unit_cache_latency": 1,
-    "memory_unit_ram_size": 1024,
-    "memory_unit_cache_size": 4,
-    "memory_unit_rs": 3,
+    "memory_unit_queue_latency": 1,
+    "memory_unit_ram_size": 4,
+    "memory_unit_queue_size": 8,
 }
