@@ -101,11 +101,11 @@ class Tomasulo:
             return
 
         for i in self.instruction_buffer.history[instruction.counter_index + 1:]:
+            i.execution = False
             if i in i.computation_unit.buffer_list:
                 i.computation_unit.remove_instruction(i)
             if i.destination is not None and i.destination.startswith("ROB"):
                 self.rat.remove_rob(i.destination)
-            i.execution = False
 
         self.instruction_buffer.pointer = instruction.result
         del instruction.related_data["branch_correction"]
@@ -227,23 +227,3 @@ class Tomasulo:
             )
             assert_list.append(append_value)
         return all(i.result for i in assert_list), assert_list
-
-
-if __name__ == '__main__':
-    code = """
-        $Mem[0] = 4
-        LD R1 0(R2)
-        LD R1 4(R2)
-        LD R1 0(R2)
-        SD R0 8(R2)
-        SD R1 12(R2)
-        LD R1 0(R2)
-        LD R1 8(R2)
-    """
-    tomasulo = Tomasulo(code).run()
-    print()
-    for k in tomasulo.instruction_buffer.history:
-        print(k)
-    print()
-    print(tomasulo.unused_code_parameters)
-    # tomasulo.rat.print_tables()

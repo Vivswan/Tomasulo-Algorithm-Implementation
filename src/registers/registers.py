@@ -18,24 +18,30 @@ class RegisterBase(Generic[T]):
         return self.data[key]
 
     def __setitem__(self, key, value: T):
+        if key >= len(self.data):
+            raise Exception("register out of range")
         if key != 0:
             self.data[key] = value
 
-    def print_table(self):
+    def print_str_tables(self):
+        str_result = ""
         for i, v in enumerate(self.data):
-            i_str = f"{i}".zfill(int(math.log(len(self.data))) - 1)
+            i_str = f"{i}".zfill(math.ceil(math.log10(len(self.data))))
             v_str = v if v == int(v) else f"{v:0.2f}"
-            print(f"{i_str}: {v_str}".ljust(10), end="")
+            str_result += f"{i_str}: {v_str}".ljust(10)
 
             if i % 16 == 0:
-                print()
+                str_result += "\n"
 
-        print()
+        str_result += "\n"
+        return str_result
 
 
 class IntegerRegister(RegisterBase[int]):
-    pass
+    def __setitem__(self, key, value: T):
+        super().__setitem__(key, int(value))
 
 
 class FloatRegister(RegisterBase[float]):
-    pass
+    def __setitem__(self, key, value: T):
+        super().__setitem__(key, float(value))

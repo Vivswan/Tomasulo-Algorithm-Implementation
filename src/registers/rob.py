@@ -57,25 +57,25 @@ class ROB(RegisterBase[ROBField]):
     def is_value_available(self, index: int):
         return self.data[index].finished
 
-    def print_table(self):
+    def print_str_tables(self):
         just = 20
         count = 1
+        str_result = ""
         for i, v in enumerate(self.data):
-            i_str = f"{i}".zfill(int(math.log(len(self.data))) - 1)
+            i_str = f"{i}".zfill(math.ceil(math.log10(len(self.data))))
             if v is not None:
                 if not v.finished:
-                    print(f"{i_str}: {v.destination}".ljust(just), end="")
+                    str_result += f"{i_str}: {v.destination}".ljust(just)
                 else:
                     value = v.value if v.value == int(v.value) else f"{v.value:0.2f}"
-                    print(f"{i_str}: {v.destination} - {value}".ljust(just), end="")
+                    str_result += f"{i_str}: {v.destination} - {value}".ljust(just)
                 count += 1
-            # else:
-            #     print(f"{i_str}".ljust(just), end="")
 
             if count % 8 == 0:
-                print()
+                str_result += "\n"
 
-        print()
+        str_result += "\n"
+        return str_result
 
     def set_value(self, index, value):
         self.data[index].value = value

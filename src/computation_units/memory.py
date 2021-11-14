@@ -1,5 +1,6 @@
+import math
 import re
-from typing import Union, Dict
+from typing import Union, Dict, List
 
 from src.computation_units.base_class import ComputationUnit
 from src.instruction.instruction import Instruction, InstructionType
@@ -37,6 +38,11 @@ class Memory(ComputationUnit):
         while len(self.load_store_queue) > self.queue_size:
             self.load_store_queue.pop(0)
 
+    def remove_instruction(self, instruction: Union[Instruction, List[Instruction]]):
+        super().remove_instruction(instruction)
+        if not instruction.execution and instruction in self.load_store_queue:
+            self.load_store_queue.remove(instruction)
+
     def set_values_from_parameters(self, parameters: Dict[str, str], remove_used=False):
         used_keys = []
         for key, value in parameters.items():
@@ -58,7 +64,7 @@ class Memory(ComputationUnit):
         if address % 4 != 0:
             raise Exception(f"[run time] Invalid memory address {address} % 4 != 0")
         address = int(address / 4)
-        return self.data[address] if address in self.data else 0
+        return self.data[address]
 
     def set_value(self, address, value):
         address = int(address)
@@ -70,6 +76,7 @@ class Memory(ComputationUnit):
     def decode_instruction(self, instruction: Instruction):
         instruction.operands[1] = int(instruction.operands[1])
         instruction.operands[2] = self.rat.get(instruction.operands[2])
+        instruction.related_data['memory_address'] = None
 
         if instruction.type == InstructionType.LD:
             instruction.operands[0] = self.rat.reserve_rob(instruction.operands[0])
@@ -87,7 +94,7 @@ class Memory(ComputationUnit):
             if memory_address % 4 != 0:
                 raise Exception(f"Invalid memory address: {memory_address} % 4 != 0")
 
-            if "memory_address" not in instruction.related_data:
+            if instruction.related_data["memory_address"] is None:
                 instruction.related_data["memory_address"] = memory_address
                 instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
                 return True
@@ -97,7 +104,7 @@ class Memory(ComputationUnit):
         to_compute: Instruction = None
 
         for check in self.buffer_list:
-            if "memory_address" not in check.related_data:
+            if check.related_data["memory_address"] is None:
                 return None
             if check.stage_event.memory is None:
                 to_compute = check
@@ -138,3 +145,20 @@ class Memory(ComputationUnit):
             return instruction.stage_event.memory and instruction.stage_event.memory[1]
         if instruction.type == InstructionType.SD:
             return instruction.stage_event.commit and instruction.stage_event.commit[1]
+
+    def print_str_tables(self):
+        str_result = ""
+        str_result += "Memory - \n"
+        count = 1
+        for i, v in enumerate(self.data):
+            if v != 0:
+                i_str = f"{i * 4}".zfill(math.ceil(math.log10(len(self.data) * 4)))
+                v_str = v if v == int(v) else f"{v:0.2f}"
+                str_result += f"{i_str}: {v_str}".ljust(10)
+                count += 1
+
+            if count % 16 == 0:
+                str_result += "\n"
+
+        str_result += "\n"
+        return str_result

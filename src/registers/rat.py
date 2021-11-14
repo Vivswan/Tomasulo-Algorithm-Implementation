@@ -88,13 +88,15 @@ class RAT:
         else:
             return None, None
 
-    def print_tables(self):
-        print("Integer Register -  ", end="")
-        self.integer_register.print_table()
-        print("Float Register -    ", end="")
-        self.float_register.print_table()
-        print("ROB -               ", end="")
-        self.rob.print_table()
+    def print_str_tables(self):
+        str_result = ""
+        str_result += "Integer Register -  "
+        str_result += self.integer_register.print_str_tables()
+        str_result += "Float Register -    "
+        str_result += self.float_register.print_str_tables()
+        # str_result += "ROB -               "
+        # str_result += self.rob.print_str_tables()
+        return str_result
 
     def set_values_from_parameters(self, parameters: dict, remove_used=False):
         used_keys = []
@@ -113,23 +115,3 @@ class RAT:
         if remove_used:
             for key in used_keys:
                 del parameters[key]
-
-
-if __name__ == '__main__':
-    rat = RAT(3, 3, 3)
-    rat.integer_register.set_full_data([3, 2, 1])
-    rat.float_register.set_full_data([3.3, 2.2, 1.1])
-    # rat.integer_register.print_table()
-    # rat.float_register.print_table()
-
-    print(f"R1: {rat.get('R1')}")
-    print(f"R0: {rat.get('R0')}")
-    print(f"F2: {rat.get('F2')}")
-    rob_index = rat.reserve_rob("F2")
-    print(f"F2: {rat.get('F2')}")
-    rat.set_rob_value(rob_index, 2)
-    print(f"F2: {rat.get('F2')}")
-    rat.commit_rob(rob_index)
-    print(f"F2: {rat.get('F2')}")
-    print()
-    rat.print_tables()

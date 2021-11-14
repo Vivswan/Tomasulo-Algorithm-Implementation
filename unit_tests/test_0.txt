@@ -4,8 +4,11 @@ $ mem[4] = 3
 
 ! R2 = 3
 ! R4 = -1
+! R3 = 3
 #! cycle = 22
 
 Loop: ADDI R2, R2, 1
 BNE R1, R2, Loop
 SUBI R4, R4, 1
+LD R3, 4(R0)
+
