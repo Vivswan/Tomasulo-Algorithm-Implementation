@@ -1,5 +1,8 @@
-def strike(text):
+STRIKE_CHAR = "\u0336"
+
+
+def strike(text: str):
     result = ''
     for c in text:
-        result = result + c + '\u0336'
+        result = result + c + STRIKE_CHAR
     return result

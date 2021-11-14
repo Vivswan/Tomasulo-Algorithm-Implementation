@@ -11,4 +11,5 @@ Loop: ADDI R2, R2, 1
 BNE R1, R2, Loop
 SUBI R4, R4, 1
 LD R3, 4(R0)
+SD R3, 4(R0)
 

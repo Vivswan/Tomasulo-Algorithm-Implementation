@@ -50,6 +50,7 @@ class Memory(ComputationUnit):
                 continue
             address = int(key[4:-1])
             value = float(value)
+            value = int(value) if value == int(value) else value
             if address % 4 != 0:
                 raise Exception(f"[compile time] Invalid memory address {address} % 4 != 0")
             self.set_value(address, value)

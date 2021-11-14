@@ -1,6 +1,6 @@
 # simple loop on top of either 1), 2), 3), or 4), or all of them
 
-Loop LD F1, 0(R1)
+Loop: LD F1, 0(R1)
 LD F2, 0(R2)
 DIVD F3,F1,F2
 ADDD F4,F1,F2

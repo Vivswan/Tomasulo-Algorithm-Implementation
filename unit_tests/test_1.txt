@@ -1,6 +1,6 @@
 $ Mem[0] = 5
 
-! R2 = 1
+! R2 = 5
 
 # THis is Test Case 1 for Functionality
 LD R1 0(R1)

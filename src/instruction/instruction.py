@@ -95,11 +95,7 @@ def print_str_instructions(instructions: List[Instruction]):
             "Counter",
             "Index",
             "Instruction",
-            "Issue",
-            "Execute",
-            "Memory",
-            "Write Back",
-            "Commit",
+            *StageEvent.rows,
             "Result",
             "Operands",
         ]
@@ -112,11 +108,7 @@ def print_str_instructions(instructions: List[Instruction]):
             v.counter_index,
             v.index,
             v.instruction,
-            v.stage_event.issue if v.stage_event.issue != "NOP" else "",
-            v.stage_event.execute if v.stage_event.execute != "NOP" else "",
-            v.stage_event.memory if v.stage_event.memory != "NOP" else "",
-            v.stage_event.write_back if v.stage_event.write_back != "NOP" else "",
-            v.stage_event.commit if v.stage_event.commit != "NOP" else "",
+            *v.stage_event.print_str(),
             v.result,
             v.operands if v.execution else "",
         ]
@@ -128,9 +120,9 @@ def print_str_instructions(instructions: List[Instruction]):
     for i in rows:
         for j, v in enumerate(i):
             if lengths[j] < len(str(v)):
-                lengths[j] = len(str(v)) + 4
+                lengths[j] = len(str(v)) + 5
 
-    lengths[0] -= 2
+    lengths[0] = 2
     lengths[rows[0].index("Instruction")] += 6
 
     format_str = "".join(["{:<" + str(i) + "}" for i in lengths])
