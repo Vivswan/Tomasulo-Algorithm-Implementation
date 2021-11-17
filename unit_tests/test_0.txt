@@ -13,3 +13,14 @@ SUBI R4, R4, 1
 LD R3, 4(R0)
 SD R3, 4(R0)
 
+
+$ Mem[0] = 5
+
+! R2 = 5
+
+# THis is Test Case 1 for Functionality
+LD R1 0(R1)
+Loop1: ADDI R2, R2, 1
+BNE R1, R2, Loop1
+ADDI R1, R1, 5
+

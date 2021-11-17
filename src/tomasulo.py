@@ -216,14 +216,15 @@ class Tomasulo:
 
             if value is None:
                 value = self.rat.get(check_key, raise_error=False)
-            if value is None:
-                value = self.memory_unit.get_value(check_key)
+            if value is None and "mem[" in check_key.lower():
+                key = int(check_key.lower()[4:-1])
+                value = self.memory_unit.get_value(key)
 
             append_value = AssertResult(
-                result=check_value == str(value),
+                result=f"{float(check_value):.4f}" == f"{value:.4f}",
                 key=check_key,
                 check_value=check_value,
-                value=str(value)
+                value=f"{value:.4f}" if isinstance(value, float) else str(value)
             )
             assert_list.append(append_value)
         return all(i.result for i in assert_list), assert_list

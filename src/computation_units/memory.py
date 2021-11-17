@@ -155,10 +155,10 @@ class Memory(ComputationUnit):
             if v != 0:
                 i_str = f"{i * 4}".zfill(math.ceil(math.log10(len(self.data) * 4)))
                 v_str = v if v == int(v) else f"{v:0.2f}"
-                str_result += f"{i_str}: {v_str}".ljust(10)
+                str_result += f"{i_str}: {v_str}".ljust(14)
                 count += 1
 
-            if count % 16 == 0:
+            if count % 12 == 0:
                 str_result += "\n"
 
         str_result += "\n"

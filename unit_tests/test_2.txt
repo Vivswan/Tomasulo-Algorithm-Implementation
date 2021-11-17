@@ -1,9 +1,11 @@
-
-
-
 # Straight-line code where there are dependencies (true and false)
+
+$F4 = 8.14
+$F3 = 6.86
+$R1 = 4
+
 LD   F0, 0 (R1)
-DIVD F2, F0, F4
+MULTD F2, F0, F4
 ADDD F1, F0, F3
 
 #Write-After-Read (WAR: anti-dependence) on F3

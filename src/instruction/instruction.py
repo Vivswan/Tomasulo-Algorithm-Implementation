@@ -97,6 +97,7 @@ def print_str_instructions(instructions: List[Instruction]):
             "Instruction",
             *StageEvent.rows,
             "Result",
+            "Prediction",
             "Operands",
         ]
     ]
@@ -109,7 +110,8 @@ def print_str_instructions(instructions: List[Instruction]):
             v.index,
             v.instruction,
             *v.stage_event.print_str(),
-            v.result,
+            v.result if not isinstance(v.result, float) else f"{v.result:.4f}",
+            v.related_data["branch_jump"] if v.type is InstructionType.BNE else "",
             v.operands if v.execution else "",
         ]
         strike_row.append(v.execution)
@@ -120,7 +122,7 @@ def print_str_instructions(instructions: List[Instruction]):
     for i in rows:
         for j, v in enumerate(i):
             if lengths[j] < len(str(v)):
-                lengths[j] = len(str(v)) + 6
+                lengths[j] = len(str(v)) + 5
 
     lengths[0] = 2
     lengths[rows[0].index("Instruction")] += 6
