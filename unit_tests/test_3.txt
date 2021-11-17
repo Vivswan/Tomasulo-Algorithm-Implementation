@@ -2,23 +2,24 @@
 
 $ R1 = 4
 $ R2 = 8
+$ R3 = 12
+$ F1 = 2.1
 $ F2 = 10
+$ MEM[4] = 1
+$ MEM[8] = 2
+$ MEM[12] = 3
 
-LD F4, 0(R1)
+! F3 = 2
+! F4 = 3
+! F5 = 21
+! F6 = 2
+
+MULTD F5, F1, F2
 
 # Get value from memory
-MULTD F1, F4, F2
-SD F1, 0(R2)
 LD F3, 0(R2)
+SD F5, 12(R1)
+LD F4, 0(R3)
 
-# Get the calculated value of F1 due to SD instruction
-LD F5, 4(R2)
-
-# Get value from memory
-SUB F3, F3, F5
-SD F3, 0(R2)
+# Get the calculated value of F5 due to SD instruction
 LD F6, 0(R2)
-
-# Get the calculated value of F3 due to SD instruction
-MULTD F6, F6, F6
-SD F6, 0(R1)

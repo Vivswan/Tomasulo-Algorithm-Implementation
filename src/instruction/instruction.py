@@ -97,13 +97,19 @@ def print_str_instructions(instructions: List[Instruction]):
             "Instruction",
             *StageEvent.rows,
             "Result",
-            "Prediction",
+            "Extra Info",
             "Operands",
         ]
     ]
     strike_row = [True]
 
     for i, v in enumerate(instructions):
+        extra_info = ""
+        if v.type in [InstructionType.LD, InstructionType.SD]:
+            extra_info = f'M: {v.related_data["memory_address"]}'
+        if v.type in [InstructionType.BNE, InstructionType.BEQ]:
+            extra_info = f'P: {v.related_data["branch_jump"]}'
+
         row = [
             "" if v.execution else "~",
             v.counter_index,
@@ -111,7 +117,7 @@ def print_str_instructions(instructions: List[Instruction]):
             v.instruction,
             *v.stage_event.print_str(),
             v.result if not isinstance(v.result, float) else f"{v.result:.4f}",
-            v.related_data["branch_jump"] if v.type is InstructionType.BNE else "",
+            extra_info,
             v.operands if v.execution else "",
         ]
         strike_row.append(v.execution)

@@ -78,8 +78,8 @@ class IntegerAdder(ComputationUnit):
     integer_instruction_type = [InstructionType.ADDI, InstructionType.SUBI, InstructionType.ADD, InstructionType.SUB]
     integer_require_rob = integer_instruction_type
 
-    def __init__(self, rat: RAT, latency: int, num_rs: int, btb_limit=3):
-        super().__init__(rat, latency, num_rs)
+    def __init__(self, rat: RAT, latency: int, num_rs: int, btb_limit=3, pipelined=False):
+        super().__init__(rat, latency, num_rs, pipelined)
         self.branch_unit = Branch(parent=self, btb_limit=btb_limit)
         self.instruction_type = self.integer_instruction_type + self.branch_unit.instruction_type
         self.require_rob = self.integer_require_rob + self.branch_unit.require_rob

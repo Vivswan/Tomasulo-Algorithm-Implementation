@@ -18,9 +18,10 @@ class Memory(ComputationUnit):
             ram_size: int,
             ram_latency: int,
             queue_latency: int,
-            queue_size: int
+            queue_size: int,
+            pipelined=False
     ):
-        super().__init__(rat, latency, queue_size)
+        super().__init__(rat, latency, queue_size, pipelined)
         self.ram_size = ram_size
         self.queue_size = queue_size
         self.ram_latency = ram_latency

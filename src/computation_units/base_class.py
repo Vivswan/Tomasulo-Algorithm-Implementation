@@ -9,9 +9,10 @@ class ComputationUnit:
     instruction_type: Union[Set[InstructionType], List[InstructionType]]
     require_rob: Union[Set[InstructionType], List[InstructionType]]
 
-    def __init__(self, rat: RAT, latency: int, num_rs: int):
+    def __init__(self, rat: RAT, latency: int, num_rs: int, pipelined=False):
         self.rat: RAT = rat
         self.latency: int = latency
+        self.pipelined = pipelined
         self.buffer_limit: int = num_rs
         self.buffer_list: List[Instruction] = []
         self.execute_wait_for_result = True
@@ -45,13 +46,14 @@ class ComputationUnit:
         return False
 
     def step_execute(self, cycle: int):
-        for instruction in self.buffer_list:
-            if instruction.stage_event.execute is None or instruction.stage_event.execute == "NOP":
-                continue
-            if instruction.stage_event.execute[1] >= cycle:
-                return
-            if self.has_result(cycle) and self.execute_wait_for_result:
-                return
+        if not self.pipelined:
+            for instruction in self.buffer_list:
+                if instruction.stage_event.execute is None or instruction.stage_event.execute == "NOP":
+                    continue
+                if instruction.stage_event.execute[1] >= cycle:
+                    return
+                if self.has_result(cycle) and self.execute_wait_for_result:
+                    return
 
         for instruction in self.buffer_list:
             if instruction.stage_event.issue >= cycle:
