@@ -1,23 +1,32 @@
 # Straight-line code where there are dependencies (true and false)
 
-$F4 = 8.14
-$F3 = 6.86
-$R1 = 4
+$ R1 = 3
+$ R2 = 4
+$ R3 = 5
+$ F1 = 1.5
+$ F2 = 3.5
+$ F3 = 4.0
 
-LD   F0, 0 (R1)
-MULTD F2, F0, F4
-ADDD F1, F0, F3
+! R2 = -3
+! R4 = -1
+! R5 = -2
+! F4 = 5
+! F5 = -2.5
+! F6 = 5
+! F7 = 1
 
-#Write-After-Read (WAR: anti-dependence) on F3
-ADDI R1, R1, -8
-SD F2, 0(R1)
+# Read-After-Read   (RAR:   read dependence) on F1
+ADDD F4, F1, F2
+SUBD F5, F1, F3
 
-LD   F0, 0 (R1)
-# Should get the previously stored F2-value
-ADDD F0, F1, F0
-#Read-After-Write (RAW: true dependence) on F0
-SUBD F3, F0, F2
-#Write-After-Read (WAR: anti-dependence) on F3
-MULTD F3, F1, F2
-#Write-After-Write (WAW: output dependence) on F3
-SD  F3, -8(R1)
+# Write-After-Read  (WAR:   anti-dependence) on R2
+SUB R4, R1, R2
+ADDI R2, R3, -8
+
+# Read-After-Write  (RAW:   true dependence) on F6
+ADDD F6, F1, F2
+SUBD F7, F6, F3
+
+# Write-After-Write (WAW: output dependence) on R5
+ADDI R5, R1, -8
+SUB R5, R1, R3
