@@ -1,20 +1,24 @@
-# straight-line code where there are forwarding among load/store instructions
+# Straight-line code where there are forwarding among load/store instructions
 
-$ F2 = 10
 $ R1 = 4
 $ R2 = 8
+$ F2 = 10
 
 LD F4, 0(R1)
-#Get value from memory
+
+# Get value from memory
 MULTD F1, F4, F2
 SD F1, 0(R2)
 LD F3, 0(R2)
-#Get the calculated value of F1 due to SD instruction
+
+# Get the calculated value of F1 due to SD instruction
 LD F5, 4(R2)
-#Get value from memory
+
+# Get value from memory
 SUB F3, F3, F5
 SD F3, 0(R2)
 LD F6, 0(R2)
-#Get the calculated value of F3 due to SD instruction
+
+# Get the calculated value of F3 due to SD instruction
 MULTD F6, F6, F6
 SD F6, 0(R1)

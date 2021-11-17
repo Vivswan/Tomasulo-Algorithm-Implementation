@@ -6,7 +6,7 @@ from src.tomasulo import Tomasulo
 from unit_tests import test_codes
 
 if __name__ == '__main__':
-    for test_case in [1]:
+    for test_case in [2]:
         print()
         str_result = f"Running Test Case {test_case}...\n"
         code = test_codes[test_case]

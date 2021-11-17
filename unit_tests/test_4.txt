@@ -1,4 +1,4 @@
-#straight-line code where there are structure hazards in reservation stations and functional unit
+# Straight-line code where there are structure hazards in reservation stations and functional unit
 
 $ F4 = 16.5
 $ F5 = 4.28
@@ -9,6 +9,7 @@ MULTD F2, F3, F4
 MULTD F1, F5, F5
 SD F2, 0(R2)
 MULTD F1, F1, F6
+
 # 2 reservation stations for FP multiplier, 3rd MULTD must wait
 ADDD F5, F4, F1
 SD F5, 0(R1)

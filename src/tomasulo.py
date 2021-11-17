@@ -220,8 +220,13 @@ class Tomasulo:
                 key = int(check_key.lower()[4:-1])
                 value = self.memory_unit.get_value(key)
 
+            try:
+                assert_result = f"{float(check_value):.4f}" == f"{value:.4f}"
+            except:
+                assert_result = check_value == str(value)
+
             append_value = AssertResult(
-                result=f"{float(check_value):.4f}" == f"{value:.4f}",
+                result=assert_result,
                 key=check_key,
                 check_value=check_value,
                 value=f"{value:.4f}" if isinstance(value, float) else str(value)
