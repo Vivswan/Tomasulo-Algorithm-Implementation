@@ -85,6 +85,7 @@ class ComputationUnit:
             if i.destination == "NOP":
                 self.remove_instruction(i)
                 continue
+            minimum_cycle = ready_cycle
             ready_instructions = i
 
         return minimum_cycle, ready_instructions
