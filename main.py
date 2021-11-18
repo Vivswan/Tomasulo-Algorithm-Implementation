@@ -54,5 +54,5 @@ def run_test_code(test_case: int):
 
 
 if __name__ == '__main__':
-    for i in [1, 2, 3, 4]:
+    for i in [6]:
         run_test_code(i)

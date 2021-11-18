@@ -38,7 +38,7 @@ class Instruction(Generic[T]):
         instruction_str = instruction_str.strip()
         instruction_type = instruction_str.split(" ")[0].replace(".", "").upper()
         operands = re.split(' |\(|\)|,', instruction_str)[1:]
-        operands = [i for i in operands if len(i) > 0]
+        operands = [i.strip() for i in operands if len(i) > 0]
 
         if not hasattr(InstructionType, instruction_type):
             raise Exception(f'Invalid instruction type: "{instruction_type}"')

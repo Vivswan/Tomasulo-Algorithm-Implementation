@@ -1,15 +1,22 @@
-#demonstration of branch prediction. For example, upon misprediction, instructions from the wrong path are fetched.
+# simple loop demonstrating functionality of branch equations,branch prediction 
+# and speculation recovery. 
 
-$R1 = 20
-$R2 = 8
-$F3 = 10.5
+$ R1 = 4
+$ R2 = 12
+$ R3 = 8
+$ R4 = 4
 
-Loop: LD F1, 0(R1)
-MULTD F2, F1, F3
-ADDD F4, F1, F2
-ADDI R1, R1, -4
-BNE R1, R2, Loop
+! R1 = 12
+! R4 = 8
+! R5 = 0
+! R6 = 0
+! R7 = 24
 
-SUB F6, F4, F3
-SD F6, 0(R2)
+Loopa: ADDI R1, R1, 2
+BNE R1, R2, Loopa
+ADDI R4, R4, 4
+BEQ R3, R4, Loopb
+ADDI R5 , R5, 5
+ADD R6, R5, R1
+Loopb: ADD R7, R1, R2
 

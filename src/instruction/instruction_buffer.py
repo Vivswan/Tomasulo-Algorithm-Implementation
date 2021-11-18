@@ -48,13 +48,17 @@ class InstructionBuffer:
                 label = label.strip()
                 self.code_pointers[label] = index
 
-            for key, value in self.code_pointers.items():
-                if key in line:
-                    line = line.replace(key, str(value - index - 1))
-
             instruction = Instruction(line, index=index)
             parser_code.append(instruction)
+
         self.full_code += parser_code
+        for key, value in self.code_pointers.items():
+            for instruction in self.full_code:
+                for index, operand in enumerate(instruction.operands):
+                    if operand == key:
+                        instruction.operands[index] = str(value - instruction.index - 1)
+                        instruction.instruction = instruction.instruction.replace(key, instruction.operands[index])
+
         return self
 
     def peak(self) -> Union[None, Instruction]:

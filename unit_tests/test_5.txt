@@ -1,16 +1,23 @@
-# simple loop on top of either 1), 2), 3), or 4), or all of them
+# Straight line code with a loop added at the end for BNE
 
-$ R1 = 4
-$ R2 = 12
+$ Mem[0] = 2.3
 
-#! cycle = 4
+$ R3 = 12
+$ R4 = 9
+$ R20 = 10
+$ R21 = 16
 
-Loop: LD F1, 0(R1)
-LD F2, 0(R2)
-MULTD F3,F1,F2
-ADDD F4,F1,F2
-SD F3, 4(R1)
-SD F4, 8(R1)
-ADD R3,R2,R1
-SUBI R2,R2,4
-BNE R2,R1, Loop
+$ F7 = 1.5
+$ F8 = 2.5
+
+! R20 = 16
+! F1 = 2.3
+! R9 = 21
+! F11 = 3.75
+
+# code should loop 3 times. 
+Loop: ADDI R20, R20, 2
+LD F1, 0 (R1)
+ADD R9, R3, R4
+MULTD F11, F7, F8
+BNE R20, R21, Loop

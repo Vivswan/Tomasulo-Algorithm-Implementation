@@ -4,7 +4,7 @@ $ R1 = 4
 $ R2 = 8
 $ R3 = 12
 $ F1 = 2.1
-$ F2 = 10
+$ F2 = 10.0
 $ MEM[4] = 1
 $ MEM[8] = 2
 $ MEM[12] = 3
@@ -21,5 +21,5 @@ LD F3, 0(R2)
 SD F5, 12(R1)
 LD F4, 0(R3)
 
-# Get the calculated value of F5 due to SD instruction
+# Get the value of F6 in a single cycle due to the previous LD for F3. 
 LD F6, 0(R2)

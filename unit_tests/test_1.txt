@@ -29,15 +29,19 @@ $ F8 = 2.5
 ! F10 = 0.1
 ! F11 = 3.75
 
+# Load/Store instructions
 LD F1, 0 (R1)
 SD F2, 0 (R2)
 
+# Integer instructions
 ADD R9, R3, R4
 ADDI R10, R5, -8
 SUB R11, R6, R7
 SUBI R12, R8, 8
 
+# Floating Addition/Subtraction Point instructions
 ADDD F9, F3, F4
 SUBD F10, F5, F6
 
+# Floating Multiplication instructions
 MULTD F11, F7, F8

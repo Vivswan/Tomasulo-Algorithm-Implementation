@@ -1,15 +1,29 @@
 # Straight-line code where there are structure hazards in reservation stations and functional unit
 
-$ F4 = 16.5
-$ F5 = 4.28
-$ F6 = 2.00
+#Modifying the number of Integer adder RS to show structure hazard resolution.
+$integer_adder_rs = 2
 
-LD F6, 0 (R1)
-MULTD F2, F3, F4
-MULTD F1, F5, F5
-SD F2, 0(R2)
-MULTD F1, F1, F6
+$ R4 = 16
+$ R5 = 4
+$ R6 = 2
+$ F4 = 3.4
+$ F5 = 5.3
+$ F6 = 2.8
 
-# 2 reservation stations for FP multiplier, 3rd MULTD must wait
-ADDD F5, F4, F1
-SD F5, 0(R1)
+!F13 = 18.02
+!F14 = 9.52
+!F15 = 14.84
+!R10 = 20
+!R11 = 14
+!R12 = 6
+
+MUlTD F13, F4, F5
+MULTD F14, F4, F6
+MULTD F15, F5, F6
+
+ADD R10, R4, R5
+SUB R11, R4, R6
+ADD R12, R5, R6
+
+
+
