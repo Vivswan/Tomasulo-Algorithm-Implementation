@@ -1,0 +1,21 @@
+num_register (default: 32) - Number of Registers used by the processor
+num_rob (default: 128) - Number of ROB registers avalable
+num_cbd (default: 1) - Number of CBD lanes
+
+integer_adder_latency (default: 1) - Number of cycle latency for Interger Adder
+integer_adder_rs (default: 5) - Number of reservation station in Interger Adder
+integer_adder_pipelined (default: 0) - [0 = False, True = 1] is Interger Adder pipelined?
+
+float_adder_latency (default: 3) - Number of cycle latency for Float Adder
+float_adder_rs (default: 3) - Number of reservation station in Float Adder
+float_adder_pipelined (default: 1) - [0 = False, True = 1] is Float Adder pipelined?
+
+float_multiplier_latency (default: 20) - Number of cycle latency for Float Multiplier
+float_multiplier_rs (default: 2) - Number of reservation station in Float Multiplier
+float_multiplier_pipelined (default: 1) - [0 = False, True = 1] is Float Multiplier pipelined?
+
+memory_unit_latency (default: 1) - Number of cycle latency for calculating the address in execution stage
+memory_unit_ram_latency (default: 4) - Number of cycle latency for loading/storing a value to/from RAM/cache
+memory_unit_queue_latency (default: 1) - Number of cycle latency for loading a value from load store queue
+memory_unit_ram_size (default: 1024) - The size of RAM/cache available (number of storeable value = size / 4, since word address used)
+memory_unit_queue_size (default: 8) - The size of load store queue available
