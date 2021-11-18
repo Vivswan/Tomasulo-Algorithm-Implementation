@@ -34,19 +34,20 @@ class Tomasulo:
         self.integer_adder = IntegerAdder(
             rat=self.rat,
             latency=self.parameters["integer_adder_latency"],
-            num_rs=self.parameters["integer_adder_rs"]
+            num_rs=self.parameters["integer_adder_rs"],
+            pipelined=bool(self.parameters["integer_adder_pipelined"]),
         )
         self.float_adder = FloatAdder(
             rat=self.rat,
             latency=self.parameters["float_adder_latency"],
             num_rs=self.parameters["float_adder_rs"],
-            pipelined=True
+            pipelined=bool(self.parameters["float_adder_pipelined"]),
         )
         self.float_multiplier = FloatMultiplier(
             rat=self.rat,
             latency=self.parameters["float_multiplier_latency"],
             num_rs=self.parameters["float_multiplier_rs"],
-            pipelined=True
+            pipelined=bool(self.parameters["float_multiplier_pipelined"]),
         )
         self.memory_unit = Memory(
             rat=self.rat,
