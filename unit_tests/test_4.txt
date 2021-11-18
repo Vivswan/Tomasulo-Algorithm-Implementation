@@ -1,7 +1,8 @@
 # Straight-line code where there are structure hazards in reservation stations and functional unit
 
-#Modifying the number of Integer adder RS to show structure hazard resolution.
-$integer_adder_rs = 2
+# Modifying the number of Integer adder RS to show structure hazard resolution.
+$ float_multiplier_rs = 2
+$ integer_adder_rs = 2
 
 $ R4 = 16
 $ R5 = 4
