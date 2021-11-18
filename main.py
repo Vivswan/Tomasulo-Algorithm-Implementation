@@ -41,6 +41,7 @@ if __name__ == '__main__':
         str_result = ("=" * max_length + "\n") + str_result + ("\n" + "=" * max_length)
 
         print(str_result)
+        # print(tomasulo.unused_code_parameters)
         print()
         print()
 

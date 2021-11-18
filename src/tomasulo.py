@@ -219,9 +219,12 @@ class Tomasulo:
 
             if value is None:
                 value = self.rat.get(check_key, raise_error=False)
-            if value is None and "mem[" in check_key.lower():
+            if value is None and "mem[" in check_key.lower() and check_key.endswith("]"):
                 key = int(check_key.lower()[4:-1])
                 value = self.memory_unit.get_value(key)
+
+            if value is None:
+                raise NotImplementedError
 
             try:
                 assert_result = f"{float(check_value):.4f}" == f"{value:.4f}"
