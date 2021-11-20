@@ -3,6 +3,7 @@ from typing import Set, List, Union, Tuple
 from src.instruction.instruction import InstructionType, Instruction
 from src.registers.rat import RAT
 from src.registers.rob import ROBField
+from src.tags import SKIP_TAG
 
 
 class ComputationUnit:
@@ -48,7 +49,7 @@ class ComputationUnit:
     def step_execute(self, cycle: int):
         if not self.pipelined:
             for instruction in self.buffer_list:
-                if instruction.stage_event.execute is None or instruction.stage_event.execute == "NOP":
+                if instruction.stage_event.execute is None or instruction.stage_event.execute == SKIP_TAG:
                     continue
                 if instruction.stage_event.execute[1] >= cycle:
                     return
@@ -82,7 +83,7 @@ class ComputationUnit:
                 continue
             if minimum_cycle <= ready_cycle:
                 continue
-            if i.destination == "NOP":
+            if i.destination == SKIP_TAG:
                 self.remove_instruction(i)
                 continue
             minimum_cycle = ready_cycle

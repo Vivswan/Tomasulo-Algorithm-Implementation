@@ -5,6 +5,7 @@ from typing import Union, Dict, List
 from src.computation_units.base_class import ComputationUnit
 from src.instruction.instruction import Instruction, InstructionType
 from src.registers.rat import RAT
+from src.tags import SKIP_TAG
 
 
 class Memory(ComputationUnit):
@@ -85,9 +86,9 @@ class Memory(ComputationUnit):
             instruction.destination = instruction.operands[0]
         if instruction.type == InstructionType.SD:
             instruction.operands[0] = self.rat.get(instruction.operands[0])
-            instruction.result = "NOP"
-            instruction.destination = "NOP"
-            instruction.stage_event.write_back = "NOP"
+            instruction.result = SKIP_TAG
+            instruction.destination = SKIP_TAG
+            instruction.stage_event.write_back = SKIP_TAG
         return instruction
 
     def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:

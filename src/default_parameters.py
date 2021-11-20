@@ -3,6 +3,9 @@ TOMASULO_DEFAULT_PARAMETERS = {
     "num_rob": 128,
     "num_cbd": 1,
 
+    "nop_latency": 1,
+    "nop_unit_pipelined": 1,
+
     "integer_adder_latency": 1,
     "integer_adder_rs": 5,
     "integer_adder_pipelined": 0,

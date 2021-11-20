@@ -4,6 +4,7 @@ from src.computation_units.base_class import ComputationUnit
 from src.helper.extract_bits import extract_rbits
 from src.instruction.instruction import Instruction, InstructionType
 from src.registers.rat import RAT
+from src.tags import SKIP_TAG
 
 
 class Branch:
@@ -20,9 +21,9 @@ class Branch:
         instruction.operands[1] = self.parent.rat.get(instruction.operands[1])
         instruction.operands[2] = int(instruction.operands[2])
         instruction.related_data['branch_prediction_accurate'] = None
-        instruction.destination = "NOP"
-        instruction.stage_event.memory = "NOP"
-        instruction.stage_event.write_back = "NOP"
+        instruction.destination = SKIP_TAG
+        instruction.stage_event.memory = SKIP_TAG
+        instruction.stage_event.write_back = SKIP_TAG
         return instruction
 
     def step_execute(self, cycle, instruction: Instruction):
@@ -108,7 +109,7 @@ class IntegerAdder(ComputationUnit):
 
         instruction.operands[0] = self.rat.reserve_rob(instruction.operands[0])
         instruction.destination = instruction.operands[0]
-        instruction.stage_event.memory = "NOP"
+        instruction.stage_event.memory = SKIP_TAG
         return instruction
 
     def step_integer_execute(self, cycle, instruction: Instruction):

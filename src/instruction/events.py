@@ -1,5 +1,7 @@
 from typing import Tuple
 
+from src.tags import SKIP_TAG
+
 
 class StageEvent:
     rows = [
@@ -25,7 +27,7 @@ class StageEvent:
             str(self.write_back),
             str(self.commit if (self.commit is None or self.commit[0] != self.commit[1]) else self.commit[0]),
         ]
-        return [("" if x == "NOP" else x) for x in r]
+        return [("" if x == SKIP_TAG else x) for x in r]
 
     def __repr__(self):
         return f"{self.issue}, {self.execute}, {self.memory}, {self.write_back}, {self.commit}"

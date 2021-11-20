@@ -7,10 +7,12 @@ from src.computation_units.float_adder import FloatAdder
 from src.computation_units.float_multiplier import FloatMultiplier
 from src.computation_units.integer_adder import IntegerAdder
 from src.computation_units.memory import Memory
+from src.computation_units.nop import NOPUnit
 from src.default_parameters import TOMASULO_DEFAULT_PARAMETERS
 from src.instruction.assert_result import AssertResult
 from src.instruction.instruction_buffer import InstructionBuffer
 from src.registers.rat import RAT
+from src.tags import SKIP_TAG, NULL_TAG
 
 
 class Tomasulo:
@@ -31,6 +33,12 @@ class Tomasulo:
         )
         self.rat.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
 
+        self.nop_unit = NOPUnit(
+            rat=self.rat,
+            latency=self.parameters["nop_latency"],
+            num_rs=-1,
+            pipelined=bool(self.parameters["nop_unit_pipelined"]),
+        )
         self.integer_adder = IntegerAdder(
             rat=self.rat,
             latency=self.parameters["integer_adder_latency"],
@@ -59,6 +67,7 @@ class Tomasulo:
         )
         self.memory_unit.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
         self.computational_units: List[ComputationUnit] = [
+            self.nop_unit,
             self.integer_adder,
             self.float_adder,
             self.float_multiplier,
@@ -160,10 +169,11 @@ class Tomasulo:
         for _, instruction in instructions_to_cdb[:self.parameters["num_cbd"]]:
             instruction.computation_unit.remove_instruction(instruction)
 
-            rob_entry = self.rat.set_rob_value(instruction.destination, instruction.result)
-            for instr in self.instruction_buffer.history:
-                if rob_entry in instr.operands:
-                    instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
+            if instruction.destination not in [NULL_TAG, SKIP_TAG]:
+                rob_entry = self.rat.set_rob_value(instruction.destination, instruction.result)
+                for instr in self.instruction_buffer.history:
+                    if rob_entry in instr.operands:
+                        instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
 
             instruction.stage_event.write_back = self.get_cycle()
 
@@ -175,15 +185,16 @@ class Tomasulo:
                 continue
             if instruction.stage_event.write_back is None:
                 return None
-            if instruction.stage_event.write_back != "NOP" and instruction.stage_event.write_back >= self.get_cycle():
+            if instruction.stage_event.write_back != SKIP_TAG and instruction.stage_event.write_back >= self.get_cycle():
                 return None
             instruction_complete_cycle = instruction.computation_unit.result_event(instruction)
             if instruction_complete_cycle is None or instruction_complete_cycle >= self.get_cycle():
                 return None
+
             instruction.stage_event.commit = (self.get_cycle(), self.get_cycle())
             if instruction.type in self.integer_adder.branch_unit.instruction_type:
                 self.rat.remove_rat_copy(instruction.counter_index)
-            if instruction.destination != "NOP":
+            if instruction.destination not in [NULL_TAG, SKIP_TAG]:
                 self.rat.commit_rob(instruction.destination)
             return None
 

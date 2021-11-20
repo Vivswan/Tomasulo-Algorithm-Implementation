@@ -11,7 +11,7 @@ operand_types = Union[str, int, float, bool]
 
 
 class InstructionType(Enum):
-    # NOP = "NOP"
+    NOP = "NOP"
 
     # Data Transfer Instructions
     LD = "LD"
