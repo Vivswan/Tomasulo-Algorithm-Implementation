@@ -96,26 +96,30 @@ class Tomasulo:
     def branch_correction(self):
         instruction = None
         for i in self.instruction_buffer.history:
-            if "branch_correction" in i.related_data and i.related_data["branch_correction"]:
-                instruction = i
-                break
+            if not ("branch_correction" in i.related_data and i.related_data["branch_correction"]):
+                continue
+            if i.stage_event.execute[1] >= self.get_cycle():
+                continue
+            instruction = i
+            break
 
         if instruction is None:
-            return
+            return False
 
         for i in self.instruction_buffer.history[instruction.counter_index + 1:]:
             i.execution = False
             if i in i.computation_unit.buffer_list:
                 i.computation_unit.remove_instruction(i)
-            if i.destination is not None and i.destination.startswith("ROB"):
-                self.rat.remove_rob(i.destination)
 
+        self.rat.reverse_rat_to_copy(instruction.counter_index)
         self.instruction_buffer.pointer = instruction.result
         del instruction.related_data["branch_correction"]
+        return True
 
     def issue(self):
         self.assign_computational_unit()
-        self.branch_correction()
+        if self.branch_correction():
+            return None
 
         peak_instruction = self.instruction_buffer.peak()
         if peak_instruction is None:
@@ -135,6 +139,7 @@ class Tomasulo:
         # The predictions has been made on the outcome of the branch instruction.
         if instruction.type in self.integer_adder.branch_unit.instruction_type:
             self.instruction_buffer.pointer += self.integer_adder.branch_unit.predict(instruction)
+            self.rat.make_copy_on_id(instruction.counter_index)
 
     def execute(self):
         for i in self.computational_units:
@@ -176,6 +181,8 @@ class Tomasulo:
             if instruction_complete_cycle is None or instruction_complete_cycle >= self.get_cycle():
                 return None
             instruction.stage_event.commit = (self.get_cycle(), self.get_cycle())
+            if instruction.type in self.integer_adder.branch_unit.instruction_type:
+                self.rat.remove_rat_copy(instruction.counter_index)
             if instruction.destination != "NOP":
                 self.rat.commit_rob(instruction.destination)
             return None

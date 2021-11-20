@@ -1,26 +1,8 @@
-$ R1 = 3
+$ integer_adder_latency = 10
+$ R1 = 2
 $ F1 = 5
-$ mem[4] = 3
 
-! R2 = 3
-! R4 = -1
-! R3 = 3
-#! cycle = 22
-
-Loop: ADDI R2, R2, 1
+Loop: ADDD F1, F1, F1
+ADDI R2, R2, 1
 BNE R1, R2, Loop
-SUBI R4, R4, 1
-LD R3, 4(R0)
-SD R3, 4(R0)
-
-
-$ Mem[0] = 5
-
-! R2 = 5
-
-# THis is Test Case 1 for Functionality
-LD R1 0(R1)
-Loop1: ADDI R2, R2, 1
-BNE R1, R2, Loop1
-ADDI R1, R1, 5
 

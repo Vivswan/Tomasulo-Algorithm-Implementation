@@ -11,6 +11,8 @@ operand_types = Union[str, int, float, bool]
 
 
 class InstructionType(Enum):
+    # NOP = "NOP"
+
     # Data Transfer Instructions
     LD = "LD"
     SD = "SD"
@@ -118,7 +120,7 @@ def print_str_instructions(instructions: List[Instruction]):
             *v.stage_event.print_str(),
             v.result if not isinstance(v.result, float) else f"{v.result:.4f}",
             extra_info,
-            v.operands if v.execution else "",
+            v.operands,
         ]
         strike_row.append(v.execution)
         row = [str(ii) for ii in row]
