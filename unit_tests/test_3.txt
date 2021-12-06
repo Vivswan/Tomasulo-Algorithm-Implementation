@@ -18,6 +18,7 @@ MULTD F5, F1, F2
 
 # Get value from memory
 LD F3, 0(R2)
+LD F6, 0(R2)
 SD F5, 12(R1)
 LD F4, 0(R3)
 

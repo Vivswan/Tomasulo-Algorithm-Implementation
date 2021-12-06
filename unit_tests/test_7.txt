@@ -26,5 +26,5 @@ sd F6, 0(R2)
 addi R1, R1, -4
 addi R2, R2, -4
 bne R1, R0, -8
-addi R2, R2, -4
+# addi R2, R2, -4
 NOP

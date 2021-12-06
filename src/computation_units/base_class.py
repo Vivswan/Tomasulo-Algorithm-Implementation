@@ -1,4 +1,4 @@
-from typing import Set, List, Union, Tuple
+from typing import Set, List, Union
 
 from src.instruction.instruction import InstructionType, Instruction
 from src.registers.rat import RAT
@@ -73,26 +73,23 @@ class ComputationUnit:
     def result_event(self, instruction: Instruction) -> Union[None, int]:
         raise NotImplemented
 
-    def _result(self, cycle: int) -> Tuple[Union[int, float], Instruction]:
-        ready_instructions = None
-        minimum_cycle = float('inf')
+    def _result(self, cycle: int) -> List[Instruction]:
+        ready_instructions = []
 
         for i in self.buffer_list:
             ready_cycle = self.result_event(i)
             if ready_cycle is None or ready_cycle >= cycle:
                 continue
-            if minimum_cycle <= ready_cycle:
-                continue
             if i.destination == SKIP_TAG:
                 self.remove_instruction(i)
                 continue
-            minimum_cycle = ready_cycle
-            ready_instructions = i
+            i.related_data["computation_ready"] = self.result_event(i)
+            ready_instructions.append(i)
 
-        return minimum_cycle, ready_instructions
+        return ready_instructions
 
     def has_result(self, cycle: int) -> bool:
-        return self._result(cycle)[1] is not None
+        return len(self._result(cycle)) > 0
 
     def peak_result(self, cycle: int):
         if not self.has_result(cycle):

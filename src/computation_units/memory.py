@@ -110,12 +110,14 @@ class Memory(ComputationUnit):
             if check.stage_event.execute[1] >= cycle:
                 continue
             if check.stage_event.memory is None:
-                self.step_memory_instruction(cycle, check)
-                continue
+                if self.step_memory_instruction(cycle, check):
+                    return None
+                else:
+                    continue
             if check.stage_event.memory[0] <= cycle <= check.stage_event.memory[1]:
                 return None
 
-    def step_memory_instruction(self, cycle, instruction: Instruction) -> None:
+    def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
         latency = self.ram_latency
         if instruction.type == InstructionType.LD:
             for check in reversed(self.load_store_queue[:self.load_store_queue.index(instruction)]):
@@ -129,17 +131,21 @@ class Memory(ComputationUnit):
             if instruction.result is None:
                 instruction.result = self.get_value(instruction.related_data["memory_address"])
             instruction.stage_event.memory = (cycle, cycle + latency - 1)
+            return True
 
         if instruction.type == InstructionType.SD:
             if instruction.prev is not None:
                 if instruction.prev.stage_event.commit is None:
-                    return None
+                    return False
                 if instruction.prev.stage_event.commit[1] >= cycle:
-                    return None
+                    return False
 
             self.set_value(instruction.related_data["memory_address"], instruction.operands[0])
             instruction.stage_event.memory = (cycle, cycle + latency - 1)
             instruction.stage_event.commit = instruction.stage_event.memory
+            return True
+
+        return False
 
     def result_event(self, instruction: Instruction) -> Union[None, int]:
         if instruction.type == InstructionType.LD:
