@@ -1,5 +1,3 @@
-from typing import Union
-
 from src.computation_units.base_class import ComputationUnit
 from src.instruction.instruction import Instruction, InstructionType
 from src.registers.rat import RAT
@@ -25,6 +23,3 @@ class NOPUnit(ComputationUnit):
 
     def is_full(self) -> bool:
         return False
-
-    def result_event(self, instruction: Instruction) -> Union[None, int]:
-        return instruction.stage_event.execute and instruction.stage_event.execute[1]

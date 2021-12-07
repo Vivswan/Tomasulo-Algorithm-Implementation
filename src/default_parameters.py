@@ -1,8 +1,8 @@
 TOMASULO_DEFAULT_PARAMETERS = {
     "num_register": 32,
     "num_rob": 128,
-    "num_cbd": 1,
-    "cbd_buffer_len": 1,
+    "num_cdb": 1,
+    "cdb_buffer_size": 10,
 
     "nop_latency": 1,
     "nop_unit_pipelined": 1,

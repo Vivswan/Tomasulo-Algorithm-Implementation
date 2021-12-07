@@ -2,6 +2,7 @@ import ast
 import copy
 from typing import List, Tuple
 
+from src.cdb import CDB
 from src.computation_units.base_class import ComputationUnit
 from src.computation_units.float_adder import FloatAdder
 from src.computation_units.float_multiplier import FloatMultiplier
@@ -10,7 +11,6 @@ from src.computation_units.memory import Memory
 from src.computation_units.nop import NOPUnit
 from src.default_parameters import TOMASULO_DEFAULT_PARAMETERS
 from src.instruction.assert_result import AssertResult
-from src.instruction.instruction import Instruction
 from src.instruction.instruction_buffer import InstructionBuffer
 from src.registers.rat import RAT
 from src.tags import SKIP_TAG, NULL_TAG
@@ -27,7 +27,6 @@ class Tomasulo:
         self.unused_code_parameters = copy.deepcopy(self.instruction_buffer.code_parameters)
         self.set_parameters(self.unused_code_parameters, remove_used=True)
 
-        self.cbd_buffer_len = self.parameters["cbd_buffer_len"]
         self.rat = RAT(
             num_integer_register=self.parameters["num_register"],
             num_float_register=self.parameters["num_register"],
@@ -75,6 +74,13 @@ class Tomasulo:
             self.float_multiplier,
             self.memory_unit,
         ]
+        self.cdb = CDB(
+            num_cdb=self.parameters["num_cdb"],
+            cdb_buffer_size=self.parameters["cdb_buffer_size"],
+            computational_units=self.computational_units,
+            instruction_buffer=self.instruction_buffer,
+            rat=self.rat,
+        )
 
     def set_parameters(self, parameters: dict, remove_used=False):
         used_keys = []
@@ -161,26 +167,7 @@ class Tomasulo:
             i.step_memory(self.get_cycle())
 
     def write_back(self):
-        instructions_to_cdb: List[Instruction] = []
-        for unit in self.computational_units:
-            if unit.has_result(self.get_cycle()):
-                instructions_to_cdb += unit.peak_result(self.get_cycle())
-
-        if len(instructions_to_cdb) == 0:
-            return None
-        instructions_to_cdb.sort(key=lambda x: (x.related_data["computation_ready"], x.counter_index))
-        print(".")
-
-        for instruction in instructions_to_cdb[:self.parameters["num_cbd"]]:
-            instruction.computation_unit.remove_instruction(instruction)
-
-            if instruction.destination not in [NULL_TAG, SKIP_TAG]:
-                rob_entry = self.rat.set_rob_value(instruction.destination, instruction.result)
-                for instr in self.instruction_buffer.history:
-                    if rob_entry in instr.operands:
-                        instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
-
-            instruction.stage_event.write_back = self.get_cycle()
+        self.cdb.step(self.get_cycle())
 
     def commit(self):
         for instruction in self.instruction_buffer.history:

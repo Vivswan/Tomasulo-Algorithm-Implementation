@@ -71,19 +71,19 @@ class ComputationUnit:
         raise NotImplemented
 
     def result_event(self, instruction: Instruction) -> Union[None, int]:
-        raise NotImplemented
+        return instruction.stage_event.execute and instruction.stage_event.execute[1]
 
     def _result(self, cycle: int) -> List[Instruction]:
         ready_instructions = []
 
         for i in self.buffer_list:
             ready_cycle = self.result_event(i)
-            if ready_cycle is None or ready_cycle >= cycle:
+            if ready_cycle is None or ready_cycle > cycle:
                 continue
             if i.destination == SKIP_TAG:
                 self.remove_instruction(i)
                 continue
-            i.related_data["computation_ready"] = self.result_event(i)
+            i.related_data["computation_ready"] = ready_cycle
             ready_instructions.append(i)
 
         return ready_instructions

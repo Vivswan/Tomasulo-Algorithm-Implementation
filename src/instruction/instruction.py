@@ -62,15 +62,18 @@ class Instruction(Generic[T]):
         self.related_data: dict = {}
 
     def __repr__(self):
-        result = str(self.index).ljust(3)
+        result = ""
+        # result += str(self.index).ljust(3)
         result += " " + str(self.counter_index).ljust(3)
         result += " " + self.instruction
-        result += f", unit={self.computation_unit.__class__.__name__}"
-        result += f", execution={self.execution}"
-        result += f", result={self.result}"
+        # result += f", unit={self.computation_unit.__class__.__name__}"
+        # result += f", execution={self.execution}"
+        # result += f", result={self.result if not isinstance(self.result, float) else f'{self.result:.3f}'}"
 
         result += f", event=[{self.stage_event}]"
-        result += f", destination={self.destination}"
+        if 'computation_ready' in self.related_data:
+            result += f", ce: {self.related_data['computation_ready']}"
+        # result += f", destination={self.destination}"
         result += f", operands={self.operands}"
         if self.type in [InstructionType.BEQ, InstructionType.BNE]:
             result += f", prediction ({self.related_data['branch_prediction_accurate']})" \
@@ -118,7 +121,7 @@ def print_str_instructions(instructions: List[Instruction]):
             v.index,
             v.instruction,
             *v.stage_event.print_str(),
-            v.result if not isinstance(v.result, float) else f"{v.result:.4f}",
+            v.result if not isinstance(v.result, float) else f"{v.result:.3f}",
             extra_info,
             v.operands,
         ]
@@ -130,7 +133,7 @@ def print_str_instructions(instructions: List[Instruction]):
     for i in rows:
         for j, v in enumerate(i):
             if lengths[j] < len(str(v)):
-                lengths[j] = len(str(v)) + 5
+                lengths[j] = len(str(v)) + 1
 
     lengths[0] = 2
     lengths[rows[0].index("Instruction")] += 6

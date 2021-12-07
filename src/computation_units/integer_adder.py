@@ -1,5 +1,3 @@
-from typing import Union
-
 from src.computation_units.base_class import ComputationUnit
 from src.helper.extract_bits import extract_rbits
 from src.instruction.instruction import Instruction, InstructionType
@@ -122,6 +120,3 @@ class IntegerAdder(ComputationUnit):
             instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
             return True
         return False
-
-    def result_event(self, instruction: Instruction) -> Union[None, int]:
-        return instruction.stage_event.execute and instruction.stage_event.execute[1]

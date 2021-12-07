@@ -102,14 +102,15 @@ class RAT:
         else:
             return None, None
 
-    def print_str_tables(self):
+    def print_str_tables(self, print_rob=False):
         str_result = ""
         str_result += "Integer Register -  "
         str_result += self.integer_register.print_str_tables()
         str_result += "Float Register -    "
         str_result += self.float_register.print_str_tables()
-        # str_result += "ROB -               "
-        # str_result += self.rob.print_str_tables()
+        if print_rob:
+            str_result += "ROB -               "
+            str_result += self.rob.print_str_tables()
         return str_result
 
     def set_values_from_parameters(self, parameters: dict, remove_used=False):
