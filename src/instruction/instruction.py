@@ -5,6 +5,7 @@ from typing import List, Union, TypeVar, Generic
 
 from src.helper.strike import strike
 from src.instruction.events import StageEvent
+from src.registers.rob import ROBField
 
 T = TypeVar('T')
 operand_types = Union[str, int, float, bool]
@@ -56,7 +57,7 @@ class Instruction(Generic[T]):
         self.operands: List[operand_types] = operands
         self.stage_event = StageEvent()
         self.result: T = None
-        self.destination: str = None
+        self.destination: Union[str, ROBField] = None
 
         self.prev: 'Instruction' = None
         self.related_data: dict = {}
@@ -68,12 +69,12 @@ class Instruction(Generic[T]):
         result += " " + self.instruction
         # result += f", unit={self.computation_unit.__class__.__name__}"
         # result += f", execution={self.execution}"
-        # result += f", result={self.result if not isinstance(self.result, float) else f'{self.result:.3f}'}"
+        result += f", result={self.result if not isinstance(self.result, float) else f'{self.result:.3f}'}"
 
-        result += f", event=[{self.stage_event}]"
-        if 'computation_ready' in self.related_data:
-            result += f", ce: {self.related_data['computation_ready']}"
-        # result += f", destination={self.destination}"
+        # result += f", event=[{self.stage_event}]"
+        # if 'computation_ready' in self.related_data:
+        #     result += f", ce: {self.related_data['computation_ready']}"
+        result += f", destination={self.destination}"
         result += f", operands={self.operands}"
         if self.type in [InstructionType.BEQ, InstructionType.BNE]:
             result += f", prediction ({self.related_data['branch_prediction_accurate']})" \

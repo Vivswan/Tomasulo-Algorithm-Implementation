@@ -1,5 +1,2 @@
 - Out of order access of memory for the Ld instruction.
 - The ld instruction executing and going to memory access on the same cycle.
-- Speculation recovery. Values were affected from canceled instruction.
-- For functional units, we had a one cycle delay between write-back and execution.
-    We need to make a CDB buffer to store most information, so we can start executing faster.

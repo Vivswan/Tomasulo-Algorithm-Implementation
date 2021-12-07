@@ -37,6 +37,9 @@ class ComputationUnit:
 
     @staticmethod
     def resolve_operand(instruction, operand_index):
+        if instruction.operands[operand_index] is None:
+            raise Exception
+
         if not isinstance(instruction.operands[operand_index], ROBField):
             return True
 

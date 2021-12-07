@@ -17,8 +17,15 @@ class RAT:
         self.rob = ROB(num_rob)
 
         self.all_tables = [self.integer_register, self.float_register, self.rob]
-        self.reference_dict = {}
-        self.reference_dict_copies = {}
+        self.reference_dicts = {-1: {}}
+
+    @property
+    def reference_dict(self):
+        return self.reference_dicts[-1]
+
+    @reference_dict.setter
+    def reference_dict(self, value):
+        self.reference_dicts[-1] = value
 
     def get(self, index, raise_error=True):
         obj, obj_index = self._get_index(index, raise_error=raise_error)
@@ -29,6 +36,9 @@ class RAT:
         value = obj[obj_index]
         if isinstance(value, ROBField) and value.finished:
             return value.value
+
+        if value is None:
+            raise Exception
 
         return value
 
@@ -62,29 +72,30 @@ class RAT:
             raise Exception(f"Invalid index: {rob_index}")
 
         rob_value = self.rob[rob_i]
-        if rob_index == self.reference_dict[rob_value.destination]:
-            self.reference_dict[rob_value.destination] = rob_value.destination
-            for key, value in self.reference_dict_copies.items():
-                if rob_index == value[rob_value.destination]:
-                    value[rob_value.destination] = rob_value.destination
+        for key, value in self.reference_dicts.items():
+            if rob_index == value[rob_value.destination]:
+                value[rob_value.destination] = rob_value.destination
+            if value[rob_value.destination] == rob_value.destination:
+                del value[rob_value.destination]
 
         if write_back:
             register, register_index = self._get_index(rob_value.destination, use_references=False)
             register[register_index] = rob_value.value
 
         self.rob.remove(rob_i)
+        return copy.deepcopy(self.reference_dicts)
 
     def make_copy_on_id(self, copy_id):
-        self.reference_dict_copies[copy_id] = copy.deepcopy(self.reference_dict)
+        self.reference_dicts[copy_id] = copy.deepcopy(self.reference_dict)
 
     def reverse_rat_to_copy(self, copy_id):
-        self.reference_dict = copy.deepcopy(self.reference_dict_copies[copy_id])
-        for key in list(self.reference_dict_copies.keys()):
+        self.reference_dict = copy.deepcopy(self.reference_dicts[copy_id])
+        for key in list(self.reference_dicts.keys()):
             if key > copy_id:
                 self.remove_rat_copy(key)
 
     def remove_rat_copy(self, copy_id):
-        del self.reference_dict_copies[copy_id]
+        del self.reference_dicts[copy_id]
 
     def _get_index(self, index: str, use_references=True, raise_error=True) -> Tuple[RegisterBase, int]:
         if index in self.reference_dict and index != self.reference_dict[index] and use_references:

@@ -12,6 +12,17 @@ class ROBField:
     finished: bool = False
     index: str = ""
 
+    def set_value(self, value):
+        self.finished = True
+        self.value = value
+        return self
+
+    def __repr__(self):
+        result_str = f"{self.destination} -> {self.index}"
+        if self.finished:
+            return f"{result_str}: {self.value}"
+        return result_str
+
 
 class ROB(RegisterBase[ROBField]):
     def __init__(self, num):
@@ -78,9 +89,7 @@ class ROB(RegisterBase[ROBField]):
         return str_result
 
     def set_value(self, index, value):
-        self.data[index].value = value
-        self.data[index].finished = True
-        return self.data[index]
+        return self.data[index].set_value(value)
 
     def remove(self, index: int):
         self.data[index] = None
