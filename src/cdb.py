@@ -47,30 +47,37 @@ class CDB:
             instr.operands[instr.operands.index(rob_entry)] = rob_entry.value
         return True
 
-    def send_results(self, cycle, results):
-        remaining = []
+    def send_results(self, cycle: int, results: List[Instruction]):
+        remaining = results.copy()
         count_write_back = 0
 
         for instruction in results:
-            if count_write_back < self.num_cdb:
-                instruction.computation_unit.remove_instruction(instruction)
-                instruction.stage_event.write_back = cycle
-                if self.write_back(instruction.destination, instruction.result):
-                    count_write_back += 1
+            if count_write_back >= self.num_cdb:
+                break
+            if instruction.related_data["computation_ready"] >= cycle:
+                continue
+
+            if instruction in self.cdb_buffer:
+                self.cdb_buffer.remove(instruction)
             else:
-                remaining.append(instruction)
+                instruction.computation_unit.remove_instruction(instruction)
+
+            if self.write_back(instruction.destination, instruction.result):
+                count_write_back += 1
+
+            remaining.remove(instruction)
+            instruction.stage_event.write_back = cycle
 
         return remaining
 
     def save_to_buffer(self, results):
-        pass
-        # for instruction in to_cdb_buffer:
-        #     if len(self.cdb_buffer) >= self.cdb_buffer_size:
-        #         break
-        #     if instruction in self.cdb_buffer:
-        #         continue
-        #     instruction.computation_unit.remove_instruction(instruction)
-        #     self.cdb_buffer.append(instruction)
+        for instruction in results:
+            if len(self.cdb_buffer) >= self.cdb_buffer_size:
+                break
+            if instruction in self.cdb_buffer:
+                continue
+            instruction.computation_unit.remove_instruction(instruction)
+            self.cdb_buffer.append(instruction)
 
     def step(self, cycle: int):
         results = self.pull_results(cycle)
