@@ -56,8 +56,8 @@ class ComputationUnit:
                     continue
                 if instruction.stage_event.execute[1] >= cycle:
                     return
-                if self.has_result(cycle) and self.execute_wait_for_result:
-                    return
+                # if self.has_result(cycle) and self.execute_wait_for_result:
+                #     return
 
         for instruction in self.buffer_list:
             if instruction.stage_event.issue >= cycle:

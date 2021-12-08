@@ -173,7 +173,7 @@ class Tomasulo:
         for instruction in self.instruction_buffer.history:
             if not instruction.execution:
                 continue
-            if instruction.stage_event.commit is not None and instruction.stage_event.commit[1] < self.get_cycle():
+            if instruction.stage_event.commit is not None and instruction.stage_event.commit[0] < self.get_cycle():
                 continue
             if instruction.stage_event.write_back is None:
                 return None
@@ -188,7 +188,7 @@ class Tomasulo:
                 self.rat.remove_rat_copy(instruction.counter_index)
             if instruction.destination not in [NULL_TAG, SKIP_TAG]:
                 ref_dicts = self.rat.commit_rob(instruction.destination)
-                print(self.get_cycle(), ref_dicts)
+                # print(self.get_cycle(), ref_dicts)
             return None
 
     def step(self):

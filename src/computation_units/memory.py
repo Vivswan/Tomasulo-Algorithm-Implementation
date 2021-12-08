@@ -71,12 +71,9 @@ class Memory(ComputationUnit):
 
     def __init__(
             self,
-            rat: RAT,
-            latency: int,
-            ram_size: int,
-            ram_latency: int,
-            queue_latency: int,
-            queue_size: int,
+            rat: RAT, latency: int,
+            ram_size: int, ram_latency: int,
+            queue_size: int, queue_latency: int,
             pipelined=False
     ):
         super().__init__(rat, latency, queue_size, pipelined)
@@ -85,7 +82,13 @@ class Memory(ComputationUnit):
         self.cache_latency = queue_latency
         self.execute_wait_for_result = False
 
-        self.load_store_queue = []
+        self.load_store_queue: List[Instruction] = []
+
+    def is_full(self) -> bool:
+        if len(self.load_store_queue) == 0:
+            return False
+        else:
+            return (self.load_store_queue[0] in self.buffer_list) and len(self.load_store_queue) == self.queue_size
 
     def issue_instruction(self, instruction: Instruction):
         super().issue_instruction(instruction)
@@ -127,6 +130,12 @@ class Memory(ComputationUnit):
 
     def step_memory(self, cycle: int):
         for check in self.buffer_list:
+            if check.stage_event.memory is None:
+                continue
+            if check.stage_event.memory[0] <= cycle <= check.stage_event.memory[1]:
+                return None
+
+        for check in self.buffer_list:
             if check.related_data["memory_address"] is None:
                 return None
             if check.stage_event.execute[1] >= cycle:
@@ -136,8 +145,6 @@ class Memory(ComputationUnit):
                     return None
                 else:
                     continue
-            if check.stage_event.memory[0] <= cycle <= check.stage_event.memory[1]:
-                return None
 
     def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
         latency = self.ram.latency

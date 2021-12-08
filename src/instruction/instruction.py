@@ -134,7 +134,7 @@ def print_str_instructions(instructions: List[Instruction]):
     for i in rows:
         for j, v in enumerate(i):
             if lengths[j] < len(str(v)):
-                lengths[j] = len(str(v)) + 1
+                lengths[j] = len(str(v)) + 5
 
     lengths[0] = 2
     lengths[rows[0].index("Instruction")] += 6

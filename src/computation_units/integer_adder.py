@@ -43,7 +43,7 @@ class Branch:
     def is_busy(self):
         return len(self.parent.buffer_list) > self.parent.buffer_limit
 
-    # Updates in the execute stage and checks for misprediction
+    # Updates in to execute stage and checks for misprediction
     def check_prediction(self, instruction: Instruction, equality):
         instruction.related_data['branch_prediction_accurate'] = True
 

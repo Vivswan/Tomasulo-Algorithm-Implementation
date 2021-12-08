@@ -12,23 +12,23 @@ def run_test_code(test_case: int):
     code = test_codes[test_case]
     tomasulo = Tomasulo(code).run()
 
-    # str_result += "% Code %\n"
-    # str_result += code.strip()
-    # str_result += "\n\n"
+    str_result += "% Code %\n"
+    str_result += code.strip()
+    str_result += "\n\n"
 
     str_result += f"% Execution %\n"
     str_result += "\n"
     str_result += tomasulo.instruction_buffer.print_str_history_table()
-    # str_result += "\n"
+    str_result += "\n"
 
-    # str_result += f"% Registers %\n"
-    # str_result += tomasulo.rat.print_str_tables()
-    # str_result += tomasulo.memory_unit.print_str_tables()
-    # str_result += "\n"
+    str_result += f"% Registers %\n"
+    str_result += tomasulo.rat.print_str_tables()
+    str_result += tomasulo.memory_unit.ram.print_str_tables()
+    str_result += "\n"
 
-    # str_result += f"% Asserts %\n"
+    str_result += f"% Asserts %\n"
     assert_result, asserts = tomasulo.check_asserts()
-    # str_result += "\n".join([str(i) for i in asserts]) + "\n"
+    str_result += "\n".join([str(i) for i in asserts]) + "\n"
     str_result += f"asserts: {assert_result}"
 
     max_length = max(*[len(i.replace(STRIKE_CHAR, "").strip()) for i in str_result.split("\n")])
@@ -42,8 +42,8 @@ def run_test_code(test_case: int):
     print(str_result)
     # print("\n".join([str(i) for i in tomasulo.instruction_buffer.history]) + "\n")
     # print(tomasulo.unused_code_parameters)
-    # print()
-    # print()
+    print()
+    print()
 
     path = pathlib.Path(__file__).parent.resolve().joinpath(f"result")
     if not os.path.exists(path):
@@ -54,5 +54,5 @@ def run_test_code(test_case: int):
 
 
 if __name__ == '__main__':
-    for i in [7]:
+    for i in range(1, 9):
         run_test_code(i)
