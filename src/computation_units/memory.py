@@ -8,47 +8,18 @@ from src.registers.rat import RAT
 from src.tags import SKIP_TAG, NULL_TAG
 
 
-class Memory(ComputationUnit):
-    instruction_type = [InstructionType.LD, InstructionType.SD]
-    require_rob = [InstructionType.LD]
+class RAM:
+    def __init__(self, size: int, latency: int):
+        self.size = size
+        self.latency = latency
 
-    def __init__(
-            self,
-            rat: RAT,
-            latency: int,
-            ram_size: int,
-            ram_latency: int,
-            queue_latency: int,
-            queue_size: int,
-            pipelined=False
-    ):
-        super().__init__(rat, latency, queue_size, pipelined)
-        self.ram_size = ram_size
-        self.queue_size = queue_size
-        self.ram_latency = ram_latency
-        self.cache_latency = queue_latency
-        self.execute_wait_for_result = False
-
-        self.data = [0] * ram_size
+        self.data = [0] * size
         self.to_set_data = []
-
-        self.load_store_queue = []
-
-    def issue_instruction(self, instruction: Instruction):
-        super().issue_instruction(instruction)
-        self.load_store_queue.append(instruction)
-        while len(self.load_store_queue) > self.queue_size:
-            self.load_store_queue.pop(0)
-
-    def remove_instruction(self, instruction: Union[Instruction, List[Instruction]]):
-        super().remove_instruction(instruction)
-        if not instruction.execution and instruction in self.load_store_queue:
-            self.load_store_queue.remove(instruction)
 
     def set_values_from_parameters(self, parameters: Dict[str, str], remove_used=False):
         used_keys = []
         for key, value in parameters.items():
-            if re.fullmatch("mem\[[0-9]+\]", key.lower()) is None:
+            if re.fullmatch("mem\[[0-9]+]", key.lower()) is None:
                 continue
             address = int(key[4:-1])
             value = float(value)
@@ -75,6 +46,57 @@ class Memory(ComputationUnit):
             raise Exception(f"[run time] Invalid memory address {address} % 4 != 0")
         address = int(address / 4)
         self.data[address] = value
+
+    def print_str_tables(self):
+        str_result = ""
+        str_result += "Memory - \n"
+        count = 1
+        for i, v in enumerate(self.data):
+            if v != 0:
+                i_str = f"{i * 4}".zfill(math.ceil(math.log10(len(self.data) * 4)))
+                v_str = v if v == int(v) else f"{v:0.2f}"
+                str_result += f"{i_str}: {v_str}".ljust(14)
+                count += 1
+
+            if count % 12 == 0:
+                str_result += "\n"
+
+        str_result += "\n"
+        return str_result
+
+
+class Memory(ComputationUnit):
+    instruction_type = [InstructionType.LD, InstructionType.SD]
+    require_rob = [InstructionType.LD]
+
+    def __init__(
+            self,
+            rat: RAT,
+            latency: int,
+            ram_size: int,
+            ram_latency: int,
+            queue_latency: int,
+            queue_size: int,
+            pipelined=False
+    ):
+        super().__init__(rat, latency, queue_size, pipelined)
+        self.ram = RAM(ram_size, ram_latency)
+        self.queue_size = queue_size
+        self.cache_latency = queue_latency
+        self.execute_wait_for_result = False
+
+        self.load_store_queue = []
+
+    def issue_instruction(self, instruction: Instruction):
+        super().issue_instruction(instruction)
+        self.load_store_queue.append(instruction)
+        while len(self.load_store_queue) > self.queue_size:
+            self.load_store_queue.pop(0)
+
+    def remove_instruction(self, instruction: Union[Instruction, List[Instruction]]):
+        super().remove_instruction(instruction)
+        if not instruction.execution and instruction in self.load_store_queue:
+            self.load_store_queue.remove(instruction)
 
     def decode_instruction(self, instruction: Instruction):
         instruction.operands[1] = int(instruction.operands[1])
@@ -118,7 +140,7 @@ class Memory(ComputationUnit):
                 return None
 
     def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
-        latency = self.ram_latency
+        latency = self.ram.latency
         if instruction.type == InstructionType.LD:
             for check in reversed(self.load_store_queue[:self.load_store_queue.index(instruction)]):
                 if check.related_data["memory_address"] == instruction.related_data["memory_address"]:
@@ -129,7 +151,7 @@ class Memory(ComputationUnit):
                     latency = self.cache_latency
                     break
             if instruction.result is None:
-                instruction.result = self.get_value(instruction.related_data["memory_address"])
+                instruction.result = self.ram.get_value(instruction.related_data["memory_address"])
             instruction.stage_event.memory = (cycle, cycle + latency - 1)
             return True
 
@@ -140,7 +162,7 @@ class Memory(ComputationUnit):
                 if instruction.prev.stage_event.commit[1] >= cycle:
                     return False
 
-            self.set_value(instruction.related_data["memory_address"], instruction.operands[0])
+            self.ram.set_value(instruction.related_data["memory_address"], instruction.operands[0])
             instruction.stage_event.memory = (cycle, cycle + latency - 1)
             instruction.stage_event.commit = instruction.stage_event.memory
             return True
@@ -152,20 +174,3 @@ class Memory(ComputationUnit):
             return instruction.stage_event.memory and instruction.stage_event.memory[1]
         if instruction.type == InstructionType.SD:
             return instruction.stage_event.commit and instruction.stage_event.commit[1]
-
-    def print_str_tables(self):
-        str_result = ""
-        str_result += "Memory - \n"
-        count = 1
-        for i, v in enumerate(self.data):
-            if v != 0:
-                i_str = f"{i * 4}".zfill(math.ceil(math.log10(len(self.data) * 4)))
-                v_str = v if v == int(v) else f"{v:0.2f}"
-                str_result += f"{i_str}: {v_str}".ljust(14)
-                count += 1
-
-            if count % 12 == 0:
-                str_result += "\n"
-
-        str_result += "\n"
-        return str_result

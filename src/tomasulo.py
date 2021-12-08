@@ -66,7 +66,7 @@ class Tomasulo:
             ram_size=self.parameters["memory_unit_ram_size"],
             queue_size=self.parameters["memory_unit_queue_size"]
         )
-        self.memory_unit.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
+        self.memory_unit.ram.set_values_from_parameters(self.unused_code_parameters, remove_used=True)
         self.computational_units: List[ComputationUnit] = [
             self.nop_unit,
             self.integer_adder,
@@ -232,7 +232,7 @@ class Tomasulo:
                 value = self.rat.get(check_key, raise_error=False)
             if value is None and "mem[" in check_key.lower() and check_key.endswith("]"):
                 key = int(check_key.lower()[4:-1])
-                value = self.memory_unit.get_value(key)
+                value = self.memory_unit.ram.get_value(key)
 
             if value is None:
                 raise NotImplementedError
