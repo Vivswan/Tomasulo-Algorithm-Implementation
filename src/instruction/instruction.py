@@ -64,16 +64,16 @@ class Instruction(Generic[T]):
 
     def __repr__(self):
         result = ""
-        # result += str(self.index).ljust(3)
+        result += str(self.index).ljust(3)
         result += " " + str(self.counter_index).ljust(3)
         result += " " + self.instruction
-        # result += f", unit={self.computation_unit.__class__.__name__}"
-        # result += f", execution={self.execution}"
+        result += f", unit={self.computation_unit.__class__.__name__}"
+        result += f", execution={self.execution}"
         result += f", result={self.result if not isinstance(self.result, float) else f'{self.result:.3f}'}"
 
-        # result += f", event=[{self.stage_event}]"
-        # if 'computation_ready' in self.related_data:
-        #     result += f", ce: {self.related_data['computation_ready']}"
+        result += f", event=[{self.stage_event}]"
+        if 'computation_ready' in self.related_data:
+            result += f", ce: {self.related_data['computation_ready']}"
         result += f", destination={self.destination}"
         result += f", operands={self.operands}"
         if self.type in [InstructionType.BEQ, InstructionType.BNE]:
