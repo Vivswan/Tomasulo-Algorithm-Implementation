@@ -1,2 +1,0 @@
-- Out of order access of memory for the Ld instruction.
-- The ld instruction executing and going to memory access on the same cycle.
