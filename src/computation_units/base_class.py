@@ -22,7 +22,7 @@ class ComputationUnit:
         return len(self.buffer_list) == 0
 
     def is_full(self) -> bool:
-        return not (len(self.buffer_list) < self.buffer_limit)
+        return not len(self.buffer_list) < self.buffer_limit
 
     def decode_instruction(self, instruction: Instruction):
         raise NotImplementedError
