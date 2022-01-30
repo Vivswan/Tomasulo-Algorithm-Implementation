@@ -188,7 +188,6 @@ class Tomasulo:
                 self.rat.remove_rat_copy(instruction.counter_index)
             if instruction.destination not in [NULL_TAG, SKIP_TAG]:
                 ref_dicts = self.rat.commit_rob(instruction.destination)
-                # print(self.get_cycle(), ref_dicts)
             return None
 
     def step(self):
