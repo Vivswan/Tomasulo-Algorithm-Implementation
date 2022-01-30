@@ -24,8 +24,7 @@ class StageEvent:
             if isinstance(v, tuple):
                 if v[0] == v[1]:
                     return str(v[0])
-                else:
-                    return f"{v[0]}-{v[1]}"
+                return f"{v[0]}-{v[1]}"
 
             if v == SKIP_TAG:
                 return ""
