@@ -8,9 +8,6 @@ class NOPUnit(ComputationUnit):
     instruction_type = [InstructionType.NOP]
     require_rob = []
 
-    def __init__(self, rat: RAT, latency: int, num_rs: int, pipelined=False):
-        super().__init__(rat, latency, num_rs, pipelined)
-
     def decode_instruction(self, instruction: Instruction):
         instruction.result = NULL_TAG
         instruction.destination = NULL_TAG
