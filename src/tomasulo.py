@@ -239,7 +239,7 @@ class Tomasulo:
 
             try:
                 assert_result = f"{float(check_value):.4f}" == f"{value:.4f}"
-            except:
+            except Exception:
                 assert_result = check_value == str(value)
 
             append_value = AssertResult(
