@@ -30,7 +30,7 @@ class ROB(RegisterBase[ROBField]):
         self.pointer = 1
 
     def _get_free_rob_index_circular(self):
-        if not any([i is None for i in self.data[1:]]):
+        if not any(i is None for i in self.data[1:]):
             return None
 
         while True:
