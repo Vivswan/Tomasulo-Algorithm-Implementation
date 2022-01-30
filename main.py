@@ -16,17 +16,17 @@ def run_test_code(test_case: int):
     str_result += code.strip()
     str_result += "\n\n"
 
-    str_result += f"% Execution %\n"
+    str_result += "% Execution %\n"
     str_result += "\n"
     str_result += tomasulo.instruction_buffer.print_str_history_table()
     str_result += "\n"
 
-    str_result += f"% Registers %\n"
+    str_result += "% Registers %\n"
     str_result += tomasulo.rat.print_str_tables()
     str_result += tomasulo.memory_unit.ram.print_str_tables()
     str_result += "\n"
 
-    str_result += f"% Asserts %\n"
+    str_result += "% Asserts %\n"
     assert_result, asserts = tomasulo.check_asserts()
     str_result += "\n".join([str(i) for i in asserts]) + "\n"
     str_result += f"asserts: {assert_result}"
@@ -45,7 +45,7 @@ def run_test_code(test_case: int):
     print()
     print()
 
-    path = pathlib.Path(__file__).parent.resolve().joinpath(f"result")
+    path = pathlib.Path(__file__).parent.resolve().joinpath("result")
     if not os.path.exists(path):
         os.mkdir(path)
     path = path.joinpath(f"result_{test_case}.txt")
