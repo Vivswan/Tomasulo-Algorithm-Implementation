@@ -1,6 +1,5 @@
 from src.computation_units.base_class import ComputationUnit
 from src.instruction.instruction import Instruction, InstructionType
-from src.registers.rat import RAT
 from src.tags import SKIP_TAG, NULL_TAG
 
 
