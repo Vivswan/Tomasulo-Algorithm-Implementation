@@ -63,9 +63,11 @@ class ComputationUnit:
             if instruction.stage_event.issue >= cycle:
                 continue
 
-            if instruction.stage_event.execute is None:
-                if self.step_execute_instruction(cycle, instruction):
-                    return None
+            if (
+                instruction.stage_event.execute is None
+                and self.step_execute_instruction(cycle, instruction)
+            ):
+                return None
 
     def step_memory(self, cycle: int):
         pass
