@@ -22,8 +22,7 @@ class FloatMultiplier(ComputationUnit):
             if instruction.type == InstructionType.DIVD:
                 if instruction.operands[2] == 0:
                     raise NotImplementedError
-                else:
-                    instruction.result = instruction.operands[1] / instruction.operands[2]
+                instruction.result = instruction.operands[1] / instruction.operands[2]
 
             instruction.stage_event.execute = (cycle, cycle + self.latency - 1)
             return True

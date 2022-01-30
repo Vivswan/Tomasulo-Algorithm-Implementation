@@ -109,8 +109,7 @@ class RAT:
 
         if raise_error:
             raise Exception(f"Invalid Index: {index}")
-        else:
-            return None, None
+        return None, None
 
     def print_str_tables(self, print_rob=False):
         str_result = ""
