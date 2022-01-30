@@ -21,7 +21,7 @@ class FloatMultiplier(ComputationUnit):
                 instruction.result = instruction.operands[1] * instruction.operands[2]
             if instruction.type == InstructionType.DIVD:
                 if instruction.operands[2] == 0:
-                    raise NotImplemented
+                    raise NotImplementedError
                 else:
                     instruction.result = instruction.operands[1] / instruction.operands[2]
 

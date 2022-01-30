@@ -25,7 +25,7 @@ class ComputationUnit:
         return not (len(self.buffer_list) < self.buffer_limit)
 
     def decode_instruction(self, instruction: Instruction):
-        raise NotImplemented
+        raise NotImplementedError
 
     def issue_instruction(self, instruction: Instruction):
         if self.is_full():
@@ -71,7 +71,7 @@ class ComputationUnit:
         pass
 
     def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:
-        raise NotImplemented
+        raise NotImplementedError
 
     def result_event(self, instruction: Instruction) -> Union[None, int]:
         return instruction.stage_event.execute and instruction.stage_event.execute[1]
