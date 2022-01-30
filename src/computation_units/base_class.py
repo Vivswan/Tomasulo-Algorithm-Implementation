@@ -75,7 +75,8 @@ class ComputationUnit:
     def step_execute_instruction(self, cycle, instruction: Instruction) -> bool:
         raise NotImplementedError
 
-    def result_event(self, instruction: Instruction) -> Union[None, int]:
+    @staticmethod
+    def result_event(instruction: Instruction) -> Union[None, int]:
         return instruction.stage_event.execute and instruction.stage_event.execute[1]
 
     def _result(self, cycle: int) -> List[Instruction]:
