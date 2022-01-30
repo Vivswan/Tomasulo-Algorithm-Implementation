@@ -135,7 +135,7 @@ class RAT:
                 if reg is self.float_register:
                     reg[reg_i] = float(value)
                     used_keys.append(key)
-            except:
+            except Exception:
                 raise ValueError(f'[compile time] Invalid type of value for "{key}": found "{value}"')
 
         if remove_used:
