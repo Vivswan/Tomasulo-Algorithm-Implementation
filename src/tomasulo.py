@@ -204,7 +204,7 @@ class Tomasulo:
     def is_working(self):
         if self.instruction_buffer.peak() is not None:
             return True
-        if any([not i.is_empty() for i in self.computational_units]):
+        if any(not i.is_empty() for i in self.computational_units):
             return True
 
         for i in reversed(self.instruction_buffer.history):
