@@ -47,8 +47,7 @@ class RAT:
 
         if obj == self.rob:
             return self.rob.is_value_available(obj_index)
-        else:
-            return True
+        return True
 
     def reserve_rob(self, register_index):
         if self.rob.is_full():

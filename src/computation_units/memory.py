@@ -87,8 +87,7 @@ class Memory(ComputationUnit):
     def is_full(self) -> bool:
         if len(self.load_store_queue) == 0:
             return False
-        else:
-            return (self.load_store_queue[0] in self.buffer_list) and len(self.load_store_queue) == self.queue_size
+        return (self.load_store_queue[0] in self.buffer_list) and len(self.load_store_queue) == self.queue_size
 
     def issue_instruction(self, instruction: Instruction):
         super().issue_instruction(instruction)
@@ -143,8 +142,7 @@ class Memory(ComputationUnit):
             if check.stage_event.memory is None:
                 if self.step_memory_instruction(cycle, check):
                     return None
-                else:
-                    continue
+                continue
 
     def step_memory_instruction(self, cycle, instruction: Instruction) -> bool:
         latency = self.ram.latency

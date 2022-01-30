@@ -69,8 +69,7 @@ class Branch:
 
         if instruction.related_data["branch_jump"]:
             return int(instruction.operands[2])
-        else:
-            return 0
+        return 0
 
 
 class IntegerAdder(ComputationUnit):

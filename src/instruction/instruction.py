@@ -84,8 +84,7 @@ class Instruction(Generic[T]):
             result += f", address: {self.related_data['memory_address']}"
         if self.execution:
             return result
-        else:
-            return strike(result)
+        return strike(result)
 
 
 def create_copy_instruction(instruction: Instruction) -> Instruction:
