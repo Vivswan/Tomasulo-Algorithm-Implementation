@@ -40,8 +40,8 @@ def run_test_code(test_case: int):
     str_result = ("=" * max_length + "\n") + str_result + ("\n" + "=" * max_length)
 
     print(str_result)
-    print("\n".join([str(i) for i in tomasulo.instruction_buffer.history]) + "\n")
-    print(tomasulo.unused_code_parameters)
+    # print("\n".join([str(i) for i in tomasulo.instruction_buffer.history]) + "\n")
+    # print(tomasulo.unused_code_parameters)
     print()
     print()
 
@@ -54,5 +54,5 @@ def run_test_code(test_case: int):
 
 
 if __name__ == '__main__':
-    for i in range(1, 9):
+    for i in [6]:
         run_test_code(i)
