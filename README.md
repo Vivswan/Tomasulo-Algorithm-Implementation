@@ -1,2 +1,2 @@
-# ECE-2162-Tomasulo
-Look into "Mid-Term Project Report.pdf" to run the program.
+# Tomasulo Algorithm Implementation
+Look into [report.pdf](report.pdf) to run the program.
